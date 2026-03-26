@@ -1,0 +1,79 @@
+.roomContainer {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-color);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.roomHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-4);
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.headerLeft {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+}
+
+.roomIdBadge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent-color);
+}
+
+.roomName {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.roleBadge {
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background-color: var(--surface-hover);
+    border: 1px solid var(--border-color);
+}
+
+.roleBadge.host {
+    color: var(--warning-color);
+    border-color: var(--warning-color);
+}
+
+.roleBadge.debatiente_a {
+    color: #ef4444;
+    /* red */
+    border-color: #ef4444;
+}
+
+.roleBadge.debatiente_b {
+    color: #3b82f6;
+    /* blue */
+    border-color: #3b82f6;
+}
+
+.roleBadge.jurado {
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.roomMain {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-4);
+}

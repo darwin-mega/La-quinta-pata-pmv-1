@@ -1,0 +1,65 @@
+.header {
+    text-align: center;
+    margin-bottom: var(--spacing-8);
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    margin-top: var(--spacing-2);
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-8);
+}
+
+.stepCard {
+    padding: var(--spacing-4);
+    opacity: 0;
+    /* Starting state for animation */
+}
+
+.stepCard h3 {
+    color: var(--accent-color);
+    margin-bottom: var(--spacing-2);
+    font-size: 1.1rem;
+}
+
+.stepCard p {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    margin-top: auto;
+    padding-top: var(--spacing-4);
+}
+
+.primaryButton {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: var(--accent-color);
+    color: white;
+    text-align: center;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+}
+
+.backButton {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    text-align: center;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+}

@@ -1,0 +1,80 @@
+.homeContainer {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: var(--spacing-12);
+}
+
+.heroSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+}
+
+.logo {
+    font-size: 4rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-2);
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.description {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    max-width: 80%;
+    margin: 0 auto;
+}
+
+.actionSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    width: 100%;
+    max-width: 320px;
+}
+
+.primaryButton {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: var(--accent-color);
+    color: white;
+    text-align: center;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 1.125rem;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.primaryButton:hover {
+    background-color: var(--accent-hover);
+}
+
+.primaryButton:active {
+    transform: scale(0.98);
+}
+
+.secondaryButton {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: transparent;
+    color: var(--text-primary);
+    text-align: center;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    font-weight: 500;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.secondaryButton:hover {
+    background-color: var(--surface-hover);
+}

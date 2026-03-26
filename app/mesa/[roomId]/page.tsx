@@ -1,0 +1,212 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import styles from "./page.module.css";
+import { Room } from "@/lib/store";
+import Logo from "@/components/Logo";
+import MesaPreparationView from "@/components/views/mesa/MesaPreparationView";
+import MesaDebateView from "@/components/views/mesa/MesaDebateView";
+import MesaFallacyReviewView from "@/components/views/mesa/MesaFallacyReviewView";
+import MesaVotingView from "@/components/views/mesa/MesaVotingView";
+import MesaResolutionView from "@/components/views/mesa/MesaResolutionView";
+import MesaLeaderboardView from "@/components/views/mesa/MesaLeaderboardView";
+
+export default function MesaPage() {
+    const params = useParams();
+    const router = useRouter();
+    const roomId = params.roomId as string;
+    const [room, setRoom] = useState<Room | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    // Polling logic
+    useEffect(() => {
+        let interval: ReturnType<typeof setInterval>;
+
+        const fetchState = async () => {
+            try {
+                const res = await fetch(`/api/room/${roomId}/state`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setRoom(data.room);
+                }
+            } catch (err) {
+                console.error("Error fetching room sync:", err);
+            } finally {
+                if (loading) setLoading(false);
+            }
+        };
+
+        fetchState(); // initial fetch
+        interval = setInterval(fetchState, 2000); // Poll every 2 seconds
+
+        return () => clearInterval(interval);
+    }, [roomId, loading]);
+
+    const dispatchAction = async (action: string, payload: any = {}) => {
+        try {
+            await fetch(`/api/room/${roomId}/action`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, payload })
+            });
+            // The polling will pick up the resulting state change soon
+        } catch (err) {
+            console.error("Error dispatching action:", err);
+        }
+    };
+
+    if (loading) return <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Cargando tablero...</div>;
+    if (!room) return <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Sala no encontrada</div>;
+
+    if (room.mode !== "mesa") {
+        return (
+            <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                <h2>Esta sala no es Modo Mesa</h2>
+                <button onClick={() => router.push(`/join/${roomId}`)} style={{ color: 'var(--accent-color)', marginTop: '1rem', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}>
+                    Ir a la vista normal
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.mesaContainer}>
+            {/* HEADER COMPARTIDO */}
+            <header style={{ background: 'rgba(18, 19, 25, 0.8)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border-color)', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <Logo width={45} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3b82f6', letterSpacing: '2px', textTransform: 'uppercase' }}>MODO MESA</span>
+                        <span style={{ fontSize: '1.05rem', fontWeight: 600, color: 'white' }}>{room.name}</span>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ padding: '0.35rem 0.75rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', backgroundColor: 'rgba(59, 130, 246, 0.1)', border: `1px solid #3b82f6`, color: '#3b82f6' }}>
+                        CÓDIGO: {room.id}
+                    </div>
+                    <button
+                        onClick={() => {
+                            if (confirm('¿Estás seguro de que deseas cerrar el tablero de mesa?')) {
+                                router.push('/');
+                            }
+                        }}
+                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', transition: 'background-color 0.2s', color: 'var(--text-secondary)', cursor: 'pointer', border: 'none' }}
+                        title="Salir del tablero"
+                    >
+                        ✕
+                    </button>
+                </div>
+            </header>
+
+            <main className={styles.mesaMain}>
+                {room.state === 'lobby' && (
+                    <div className={styles.dashboard}>
+                        <div className={`glass-panel ${styles.headerCard}`}>
+                            <h1 className={`title-serif ${styles.title}`}>Tablero Principal</h1>
+                            <p className={styles.subtitle}>Iniciando Modo Mesa</p>
+                        </div>
+
+                        <div className={styles.infoGrid}>
+                            <div className={styles.infoCard}>
+                                <div className={styles.infoLabel}>Intensidad</div>
+                                <div className={styles.infoValue}>
+                                    {room.intensity === 'liviano' ? '🟢 Liviana' : room.intensity === 'medio' ? '🟡 Media' : '🔴 Filosa'}
+                                </div>
+                            </div>
+                            <div className={styles.infoCard}>
+                                <div className={styles.infoLabel}>Duración</div>
+                                <div className={styles.infoValue}>
+                                    {room.duration === 'corta' ? '⚡ Corta' : '🕰️ Larga'}
+                                </div>
+                            </div>
+                            <div className={styles.infoCard}>
+                                <div className={styles.infoLabel}>Estado</div>
+                                <div className={styles.infoValue} style={{ textTransform: 'capitalize' }}>
+                                    Esperando inicio
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className={`glass-panel`} style={{ padding: '2rem' }}>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem', color: 'white' }}>Jugadores en la Mesa ({room.players.length})</h3>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Los roles se asignarán automáticamente al iniciar.</p>
+                            
+                            <div className={styles.playersList}>
+                                {room.players.map((player, index) => (
+                                    <div key={player.id} className={styles.playerCard}>
+                                        <div className={styles.playerAvatar}>
+                                            {player.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className={styles.playerName}>
+                                            {player.name}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <button className={styles.primaryButton} onClick={() => dispatchAction("START_GAME")}>
+                                Iniciar Partida en Mesa
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {room.state === 'preparation' && (
+                    <MesaPreparationView 
+                        room={room} 
+                        onStartDebate={() => dispatchAction("START_DEBATE")} 
+                    />
+                )}
+
+                {room.state === 'debate' && (
+                    <MesaDebateView 
+                        room={room} 
+                        onPassTurn={() => dispatchAction("PASS_TURN")}
+                        onStartSpeaking={() => dispatchAction("START_SPEAKING")}
+                        onSignalFallacy={(fId) => dispatchAction("SIGNAL_FALLACY", { fallacyId: fId })}
+                        onFinishDebate={() => dispatchAction("FINISH_DEBATE")}
+                    />
+                )}
+
+                {room.state === 'fallacy_review' && (
+                    <MesaFallacyReviewView 
+                        room={room}
+                        onForceAccept={() => dispatchAction("VOTE_FALLACY", { vote: "force_accept" })}
+                        onForceReject={() => dispatchAction("VOTE_FALLACY", { vote: "force_reject" })}
+                    />
+                )}
+
+                {room.state === 'voting' && (
+                    <MesaVotingView
+                        room={room}
+                        onSubmitVotes={(votes) => dispatchAction("SUBMIT_MESA_VOTES", { votes })}
+                    />
+                )}
+
+                {room.state === 'resolution' && (
+                    <MesaResolutionView
+                        room={room}
+                        onShowLeaderboard={() => dispatchAction("SHOW_LEADERBOARD")}
+                    />
+                )}
+
+                {room.state === 'results' && (
+                    <MesaLeaderboardView
+                        room={room}
+                        onNextRound={() => dispatchAction("NEXT_ROUND")}
+                    />
+                )}
+
+                {(room.state === 'finished') && (
+                    <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', maxWidth: '800px', width: '100%' }}>
+                        <h2 style={{ fontSize: '2.5rem', margin: 0, color: 'white' }}>Partida Finalizada</h2>
+                        <button onClick={() => window.location.href = '/'} style={{ marginTop: '2rem', padding: '1rem 2rem', background: 'var(--accent-color)', color: 'white', borderRadius: 'var(--radius-md)', fontWeight: 'bold', fontSize: '1.2rem', border: 'none', cursor: 'pointer' }}>
+                            Volver al Inicio
+                        </button>
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+}
