@@ -4,7 +4,7 @@ import { getRoom, updateRoom, generatePlayerId } from "@/lib/store";
 export async function POST(req: Request, { params }: { params: { roomId: string } }) {
     try {
         const roomId = params.roomId.toUpperCase();
-        const room = getRoom(roomId);
+        const room = await getRoom(roomId);
 
         if (!room) {
             return NextResponse.json({ error: "Sala no encontrada" }, { status: 404 });
@@ -33,7 +33,7 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
             wins: 0
         });
 
-        updateRoom(roomId, { players: upPlayers });
+        await updateRoom(roomId, { players: upPlayers });
 
         return NextResponse.json({ room, playerId });
     } catch (error) {

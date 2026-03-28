@@ -179,10 +179,11 @@ export default function CreateRoom() {
                 </div>
 
                 <div className={styles.formGroup}>
-                    <label htmlFor="duration">Duración de la partida</label>
+                    <label htmlFor="duration">Modo de Partida</label>
                     <select id="duration" name="duration" value={formData.duration} onChange={handleChange} className={styles.select}>
-                        <option value="corta">Corta (Rápida, ideal para probar)</option>
-                        <option value="larga">Larga (Más vueltas rotativas)</option>
+                        <option value="corta">☕️ Modo Corto (1 debate por persona)</option>
+                        <option value="larga">⚔️ Modo Largo (3 debates por persona)</option>
+                        <option value="leyenda">🔥 Modo Leyenda (Todos contra todos)</option>
                     </select>
                 </div>
 

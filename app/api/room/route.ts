@@ -54,7 +54,7 @@ export async function POST(req: Request) {
             usedTopics: []
         };
 
-        const room = createRoom(newRoomData);
+        const room = await createRoom(newRoomData);
 
         return NextResponse.json({ room, playerId: hostId });
     } catch (error) {

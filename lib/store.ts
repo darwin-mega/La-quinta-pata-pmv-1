@@ -1,5 +1,7 @@
+import { Redis } from "@upstash/redis";
+
 export type GameIntensity = "liviano" | "medio" | "filoso";
-export type GameDuration = "corta" | "larga";
+export type GameDuration = "corta" | "larga" | "leyenda";
 export type GameState = "lobby" | "preparation" | "debate" | "fallacy_review" | "voting" | "resolution" | "results" | "finished";
 export type Role = "host" | "debatiente_a" | "debatiente_b" | "jurado";
 
@@ -13,9 +15,9 @@ export type Player = {
 };
 
 export type FallacySignal = {
-    id: string; // unique ID for the signal
-    signaledBy: string; // playerName or playerId
-    accusedId: string; // playerId of the speaker who committed it
+    id: string;
+    signaledBy: string;
+    accusedId: string;
     fallacyId: string;
     roundNumber: number;
     timestamp: number;
@@ -31,9 +33,9 @@ export type FallacyChallenge = {
 
 export type TurnPhase = {
     id: string;
-    name: string;      // e.g. "Apertura A"
-    speakerRole: Role; // who speaks
-    durationSec: number; // planned duration
+    name: string;
+    speakerRole: Role;
+    durationSec: number;
 };
 
 export type DebateState = "transition" | "speaking" | "finished";
@@ -43,18 +45,15 @@ export type Round = {
     topicId: string;
     debatienteA_Id: string;
     debatienteB_Id: string;
-
-    // CHESS CLOCK STATE
     timeRemainingA: number;
     timeRemainingB: number;
     debateState: DebateState;
     activeSpeaker: "debatiente_a" | "debatiente_b";
     transitionRemaining: number;
-
     turnStartTime: number | null;
-    votes: Record<string, string>; // VoterId -> Debatiente_Id
-    secondaryVotes: Record<string, string>; // VoterId -> reason
-    resolutionVotes?: Record<string, string>; // PlayerId -> "A" | "B" | "empate"
+    votes: Record<string, string>;
+    secondaryVotes: Record<string, string>;
+    resolutionVotes?: Record<string, string>;
     fallaciesSignaled: FallacySignal[];
     activeChallenge?: FallacyChallenge | null;
     winnerId: string | null;
@@ -62,13 +61,6 @@ export type Round = {
 
 export type Room = {
     id: string;
-    /**
-     * Define el estilo arquitectónico de la sala:
-     * - "multiplayer" (o Varios dispositivos): Cada jugador ingresa desde su propio dispositivo usando un código/QR. 
-     *   Tienen vistas privadas y votan individualmente.
-     * - "mesa": Se usa un único dispositivo como tablero central. La sala se pre-carga con todos los jugadores 
-     *   desde el principio, no requiere QR ni código para unirse, y toda la información es pública en la misma pantalla.
-     */
     mode: "multiplayer" | "mesa";
     name: string;
     intensity: GameIntensity;
@@ -82,31 +74,54 @@ export type Room = {
     createdAt: number;
 };
 
-// Global store to prevent data loss on hot reload during development
-const globalStore = global as unknown as {
-    rooms: Record<string, Room>;
-};
+// ─── Detectar si estamos en producción con Redis disponible ───
+const isRedisAvailable = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 
+let redis: Redis | null = null;
+if (isRedisAvailable) {
+    redis = new Redis({
+        url: process.env.KV_REST_API_URL!,
+        token: process.env.KV_REST_API_TOKEN!,
+    });
+}
+
+// ─── Fallback: memoria local para desarrollo ───
+const globalStore = global as unknown as { rooms: Record<string, Room> };
 if (!globalStore.rooms) {
     globalStore.rooms = {};
 }
 
-export const getRooms = () => globalStore.rooms;
+// ─── Prefijo para las claves en Redis ───
+const ROOM_KEY = (id: string) => `room:${id.toUpperCase()}`;
+const ROOM_TTL = 60 * 60 * 4; // 4 horas en segundos => Las salas expiran automáticamente
 
-export const getRoom = (id: string): Room | undefined => {
-    return globalStore.rooms[id.toUpperCase()];
+// ─── Funciones CRUD (funcionan tanto en local como en producción) ───
+
+export const getRoom = async (id: string): Promise<Room | undefined> => {
+    const key = id.toUpperCase();
+    if (redis) {
+        const data = await redis.get<Room>(ROOM_KEY(key));
+        return data ?? undefined;
+    }
+    return globalStore.rooms[key];
 };
 
-export const createRoom = (roomData: Omit<Room, "id" | "createdAt">): Room => {
-    // Generate random 4 letter code
+export const getRooms = async (): Promise<Record<string, Room>> => {
+    // En Redis no listamos todas las salas (no es necesario para el juego).
+    // Solo se usa en desarrollo.
+    return globalStore.rooms;
+};
+
+export const createRoom = async (roomData: Omit<Room, "id" | "createdAt">): Promise<Room> => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let id = "";
     for (let i = 0; i < 4; i++) {
         id += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
-    // Ensure unique
-    if (globalStore.rooms[id]) {
+    // Verificar que no exista
+    const existing = await getRoom(id);
+    if (existing) {
         return createRoom(roomData);
     }
 
@@ -116,14 +131,28 @@ export const createRoom = (roomData: Omit<Room, "id" | "createdAt">): Room => {
         createdAt: Date.now()
     };
 
-    globalStore.rooms[id] = room;
+    if (redis) {
+        await redis.set(ROOM_KEY(id), JSON.stringify(room), { ex: ROOM_TTL });
+    } else {
+        globalStore.rooms[id] = room;
+    }
+
     return room;
 };
 
-export const updateRoom = (id: string, updates: Partial<Room>) => {
-    const room = getRoom(id);
+export const saveRoom = async (room: Room): Promise<void> => {
+    if (redis) {
+        await redis.set(ROOM_KEY(room.id), JSON.stringify(room), { ex: ROOM_TTL });
+    } else {
+        globalStore.rooms[room.id] = room;
+    }
+};
+
+export const updateRoom = async (id: string, updates: Partial<Room>): Promise<void> => {
+    const room = await getRoom(id);
     if (room) {
-        globalStore.rooms[room.id] = { ...room, ...updates };
+        const updated = { ...room, ...updates };
+        await saveRoom(updated);
     }
 };
 
@@ -136,15 +165,12 @@ export const syncTimers = (room: Room) => {
     const round = room.rounds[room.currentRoundIndex];
     if (round.debateState === "finished" || !round.turnStartTime) return room;
 
-    // Avoid updating multiple times exactly the same millisecond timestamp logic, keep it purely dynamic
     const now = Date.now();
     let elapsedSec = Math.floor((now - round.turnStartTime) / 1000);
 
     if (round.debateState === "transition") {
         if (elapsedSec >= round.transitionRemaining) {
-            // Se le acabó la transición, empieza automáticamente a contar su tiempo principal
             round.debateState = "speaking";
-            // Ajustamos el turnStartTime como si hubiese empezado justo cuando acabó la transición
             round.turnStartTime = round.turnStartTime + (round.transitionRemaining * 1000);
             elapsedSec = Math.floor((Date.now() - round.turnStartTime) / 1000);
         }

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { getRoom, updateRoom, Round, FallacySignal, generatePlayerId, syncTimers } from "@/lib/store";
+import { getRoom, updateRoom, saveRoom, Round, FallacySignal, generatePlayerId, syncTimers } from "@/lib/store";
 import { topics } from "@/data/topics";
 
 export async function POST(req: Request, { params }: { params: { roomId: string } }) {
     try {
         const roomId = params.roomId.toUpperCase();
-        let room = getRoom(roomId);
+        let room = await getRoom(roomId);
 
         if (!room) {
             return NextResponse.json({ error: "Sala no encontrada" }, { status: 404 });
@@ -92,7 +92,9 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
 
                 const newRounds = [...room.rounds, newRound];
 
-                updateRoom(roomId, {
+                const isGameOver = false; // El NEXT_ROUND solo ocurre si no terminó
+
+                await updateRoom(roomId, {
                     state: "preparation",
                     players: updatedPlayers,
                     rounds: newRounds,
@@ -106,7 +108,7 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
             case "START_DEBATE": {
                 const round = room.rounds[room.currentRoundIndex];
                 round.turnStartTime = Date.now();
-                updateRoom(roomId, { state: "debate", rounds: [...room.rounds] });
+                await updateRoom(roomId, { state: "debate", rounds: [...room.rounds] });
                 return NextResponse.json({ success: true });
             }
 
@@ -136,7 +138,7 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                         }
                     }
                 }
-                updateRoom(roomId, { rounds: [...room.rounds] });
+                await updateRoom(roomId, { rounds: [...room.rounds] });
                 return NextResponse.json({ success: true });
             }
 
@@ -145,7 +147,7 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                 if (round.debateState === "transition") {
                     round.debateState = "speaking";
                     round.turnStartTime = Date.now();
-                    updateRoom(roomId, { rounds: [...room.rounds] });
+                    await updateRoom(roomId, { rounds: [...room.rounds] });
                 }
                 return NextResponse.json({ success: true });
             }
@@ -200,15 +202,15 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                     }
                 }
 
-                updateRoom(roomId, { rounds: [...room.rounds] });
+                await updateRoom(roomId, { rounds: [...room.rounds] });
                 return NextResponse.json({ success: true });
             }
 
             case "FINISH_DEBATE": {
                 if (room.players.length === 2) {
-                    updateRoom(roomId, { state: "resolution" });
+                    await updateRoom(roomId, { state: "resolution" });
                 } else {
-                    updateRoom(roomId, { state: "voting" });
+                    await updateRoom(roomId, { state: "voting" });
                 }
                 return NextResponse.json({ success: true });
             }
@@ -238,12 +240,12 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                     noVotes: []
                 };
 
-                updateRoom(roomId, { state: "fallacy_review", rounds: [...room.rounds] });
+                await updateRoom(roomId, { state: "fallacy_review", rounds: [...room.rounds] });
                 return NextResponse.json({ success: true });
             }
 
             case "VOTE_FALLACY": {
-                const { playerId, vote } = payload; // vote = 'yes' | 'no' | 'resolve_force' | 'force_accept' | 'force_reject'
+                const { playerId, vote } = payload;
                 const round = room.rounds[room.currentRoundIndex];
                 if (!round.activeChallenge) return NextResponse.json({ error: "No active challenge" }, { status: 400 });
 
@@ -253,7 +255,8 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                     round.activeChallenge.noVotes.push(playerId);
                 }
 
-                const expectedVotersCount = room.players.length - 1; // Todos menos el orador
+                // El resto de jugadores (no involucrados) son los que votan
+                const expectedVotersCount = Math.max(1, room.players.length - 2); 
                 const totalVotes = round.activeChallenge.yesVotes.length + round.activeChallenge.noVotes.length;
 
                 const isForceMode = vote === "resolve_force" || vote === "force_accept" || vote === "force_reject";
@@ -261,6 +264,9 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                 if (totalVotes >= expectedVotersCount || isForceMode) {
                     const shouldAccept = vote === "force_accept" || (vote !== "force_reject" && round.activeChallenge.yesVotes.length >= round.activeChallenge.noVotes.length);
                     
+                    const accuser = room.players.find(p => p.id === round.activeChallenge!.accuserId);
+                    const accused = room.players.find(p => p.id === round.activeChallenge!.accusedId);
+
                     if (shouldAccept) {
                         const signal: FallacySignal = {
                             id: generatePlayerId(),
@@ -272,15 +278,18 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                         };
                         round.fallaciesSignaled.push(signal);
                         
-                        // Premiar con 1 punto al acusador por detectar la falacia correctamente
-                        const accuser = room.players.find(p => p.id === round.activeChallenge!.accuserId);
+                        // Premiar con 1 punto al acusador y restar 1 al acusado
                         if (accuser) accuser.score += 1;
+                        if (accused) accused.score = Math.max(0, accused.score - 1);
+                    } else {
+                        // Penalizar al acusador con 1 punto si se equivocó
+                        if (accuser) accuser.score = Math.max(0, accuser.score - 1);
                     }
                     round.activeChallenge = null;
                     round.turnStartTime = Date.now();
-                    updateRoom(roomId, { state: "debate", rounds: [...room.rounds] });
+                    await updateRoom(roomId, { state: "debate", rounds: [...room.rounds], players: [...room.players] });
                 } else {
-                    updateRoom(roomId, { rounds: [...room.rounds] });
+                    await updateRoom(roomId, { rounds: [...room.rounds] });
                 }
 
                 return NextResponse.json({ success: true });
@@ -293,24 +302,35 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                 round.votes[playerId] = votedForId;
                 if (reason) round.secondaryVotes[playerId] = reason;
 
-                updateRoom(roomId, { rounds: [...room.rounds] });
+                // Cierre automático si todos los jurados votaron
+                const juridicoPlayers = room.players.filter(p => p.id !== round.debatienteA_Id && p.id !== round.debatienteB_Id);
+                const totalJurado = juridicoPlayers.length;
+                const votesReceived = Object.keys(round.votes).length;
+
+                if (votesReceived >= totalJurado && totalJurado > 0) {
+                    // Esperar un poquito o disparar el cierre inmediato
+                    // Para ser más fluido, llamamos a la lógica de cierre aquí
+                    await handle_CLOSE_VOTING(roomId, room);
+                } else {
+                    await updateRoom(roomId, { rounds: [...room.rounds] });
+                }
+
                 return NextResponse.json({ success: true });
             }
 
             case "VOTE_RESOLUTION": {
-                // For 2 players
-                const { playerId, vote } = payload; // vote is "A", "B", or "empate"
+                const { playerId, vote } = payload;
                 const round = room.rounds[room.currentRoundIndex];
 
                 if (!round.resolutionVotes) round.resolutionVotes = {};
                 round.resolutionVotes[playerId] = vote;
-                updateRoom(roomId, { rounds: [...room.rounds] });
+                await updateRoom(roomId, { rounds: [...room.rounds] });
                 return NextResponse.json({ success: true });
             }
 
             case "SUBMIT_MESA_VOTES": {
                 if (room.mode !== "mesa") return NextResponse.json({ error: "Invalid mode" }, { status: 400 });
-                const { votes } = payload; // Record<playerId, "A" | "B" | "empate">
+                const { votes } = payload;
                 const round = room.rounds[room.currentRoundIndex];
                 
                 let votesA = 0;
@@ -350,63 +370,19 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                 }
                 
                 round.resolutionVotes = votes as Record<string, string>;
-                updateRoom(roomId, { state: "resolution", rounds: [...room.rounds], players: [...room.players] });
+                await updateRoom(roomId, { state: "resolution", rounds: [...room.rounds], players: [...room.players] });
                 return NextResponse.json({ success: true, scoreA, scoreB });
             }
 
             case "SHOW_LEADERBOARD": {
                 if (room.mode === "mesa") {
-                    updateRoom(roomId, { state: "results" });
+                    await updateRoom(roomId, { state: "results" });
                 }
                 return NextResponse.json({ success: true });
             }
 
             case "CLOSE_VOTING": {
-                const round = room.rounds[room.currentRoundIndex];
-                let winner = "empate";
-
-                // Logic based on player count
-                if (room.players.length === 2) {
-                    const votes = Object.values(round.resolutionVotes || {});
-                    if (votes.length === 2 && votes[0] === votes[1]) { // Both agree
-                        if (votes[0] === "A") winner = round.debatienteA_Id;
-                        else if (votes[0] === "B") winner = round.debatienteB_Id;
-                    }
-                    // else mismatch = empate
-                } else {
-                    let votesA = 0;
-                    let votesB = 0;
-                    Object.values(round.votes).forEach(vId => {
-                        if (vId === round.debatienteA_Id) votesA++;
-                        if (vId === round.debatienteB_Id) votesB++;
-                    });
-
-                    if (votesA > votesB) winner = round.debatienteA_Id;
-                    else if (votesB > votesA) winner = round.debatienteB_Id;
-                }
-
-                round.winnerId = winner;
-
-                // Score distribution for generic multi-device mode
-                const pA = room.players.find(p => p.id === round.debatienteA_Id);
-                const pB = room.players.find(p => p.id === round.debatienteB_Id);
-
-                if (pA && pB) {
-                    if (winner === pA.id) {
-                        pA.score += 3;
-                        pA.wins += 1;
-                        if (room.players.length > 2 && Object.values(round.votes).includes(pB.id)) pB.score += 1;
-                    } else if (winner === pB.id) {
-                        pB.score += 3;
-                        pB.wins += 1;
-                        if (room.players.length > 2 && Object.values(round.votes).includes(pA.id)) pA.score += 1;
-                    } else { // empate
-                        pA.score += 2;
-                        pB.score += 2;
-                    }
-                }
-
-                updateRoom(roomId, { state: "results", rounds: [...room.rounds], players: [...room.players] });
+                await handle_CLOSE_VOTING(roomId, room);
                 return NextResponse.json({ success: true });
             }
 
@@ -415,6 +391,71 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
         }
 
     } catch (error) {
+        console.error("Error in action handler:", error);
         return NextResponse.json({ error: "Error de servidor" }, { status: 500 });
     }
+}
+
+async function handle_CLOSE_VOTING(roomId: string, room: any) {
+    const round = room.rounds[room.currentRoundIndex];
+    let winner = "empate";
+
+    if (room.players.length === 2) {
+        const votes = Object.values(round.resolutionVotes || {});
+        if (votes.length === 2 && votes[0] === votes[1]) {
+            if (votes[0] === "A") winner = round.debatienteA_Id;
+            else if (votes[0] === "B") winner = round.debatienteB_Id;
+        }
+    } else {
+        let votesA = 0;
+        let votesB = 0;
+        Object.values(round.votes).forEach(vId => {
+            if (vId === round.debatienteA_Id) votesA++;
+            if (vId === round.debatienteB_Id) votesB++;
+        });
+
+        if (votesA > votesB) winner = round.debatienteA_Id;
+        else if (votesB > votesA) winner = round.debatienteB_Id;
+    }
+
+    round.winnerId = winner;
+
+    const pA = room.players.find((p: any) => p.id === round.debatienteA_Id);
+    const pB = room.players.find((p: any) => p.id === round.debatienteB_Id);
+
+    if (pA && pB) {
+        if (winner === pA.id) {
+            pA.score += 5; // +5 para el ganador
+            pA.wins += 1;
+            // pB recibe 0 (no cambia nada, pero explícito por las reglas)
+        } else if (winner === pB.id) {
+            pB.score += 5; // +5 para el ganador
+            pB.wins += 1;
+            // pA recibe 0
+        } else { // empate
+            pA.score += 2; // +2 cada uno
+            pB.score += 2;
+        }
+    }
+
+    // Determinar si el juego terminó según el modo
+    const numPlayers = room.players.length;
+    let maxRounds = 999;
+    
+    if (room.duration === "corta") {
+        maxRounds = Math.ceil(numPlayers / 2); // Cada uno debate al menos 1 vez
+    } else if (room.duration === "larga") {
+        maxRounds = Math.ceil((numPlayers * 3) / 2); // Cada uno debate 3 veces
+    } else if (room.duration === "leyenda") {
+        maxRounds = (numPlayers * (numPlayers - 1)) / 2; // Todos contra todos
+    }
+
+    const isGameOver = (room.currentRoundIndex + 1) >= maxRounds;
+    const newState = isGameOver ? "results" : "results"; // Seguimos yendo a results para ver el puntaje de la ronda
+
+    await updateRoom(roomId, { 
+        state: newState, 
+        rounds: [...room.rounds], 
+        players: [...room.players] 
+    });
 }
