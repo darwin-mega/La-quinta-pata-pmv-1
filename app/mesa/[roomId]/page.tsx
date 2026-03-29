@@ -164,7 +164,7 @@ export default function MesaPage() {
                         room={room} 
                         onPassTurn={() => dispatchAction("PASS_TURN")}
                         onStartSpeaking={() => dispatchAction("START_SPEAKING")}
-                        onSignalFallacy={(fId) => dispatchAction("SIGNAL_FALLACY", { fallacyId: fId })}
+                        onSignalFallacyWithAccuser={(fId, accuserId) => dispatchAction("SIGNAL_FALLACY", { fallacyId: fId, accuserId })}
                         onFinishDebate={() => dispatchAction("FINISH_DEBATE")}
                     />
                 )}

@@ -234,7 +234,7 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
 
                 round.activeChallenge = {
                     fallacyId,
-                    accuserId: playerId,
+                    accuserId: payload.accuserId || playerId,
                     accusedId,
                     yesVotes: [],
                     noVotes: []
@@ -282,8 +282,8 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                         if (accuser) accuser.score += 1;
                         if (accused) accused.score = Math.max(0, accused.score - 1);
                     } else {
-                        // Penalizar al acusador con 1 punto si se equivocó
-                        if (accuser) accuser.score = Math.max(0, accuser.score - 1);
+                        // Penalizar al acusador con 1 punto si se equivocó (solo en modo normal)
+                        if (room.mode !== "mesa" && accuser) accuser.score = Math.max(0, accuser.score - 1);
                     }
                     round.activeChallenge = null;
                     round.turnStartTime = Date.now();

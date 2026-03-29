@@ -6,12 +6,12 @@ import { topics } from "@/data/topics";
 import { playTurnSound, playFallacySound } from "@/lib/sounds";
 
 export default function MesaDebateView({
-    room, onPassTurn, onStartSpeaking, onSignalFallacy, onFinishDebate
+    room, onPassTurn, onStartSpeaking, onSignalFallacyWithAccuser, onFinishDebate
 }: {
     room: Room,
     onPassTurn: () => void,
     onStartSpeaking: () => void,
-    onSignalFallacy: (fId: string) => void,
+    onSignalFallacyWithAccuser: (fId: string, accuserId: string) => void,
     onFinishDebate: () => void
 }) {
     const [showFallacies, setShowFallacies] = useState(false);
@@ -65,6 +65,23 @@ export default function MesaDebateView({
 
     const bothExhausted = round.timeRemainingA === 0 && round.timeRemainingB === 0;
     const activePlayer = round.activeSpeaker === "debatiente_a" ? pA : pB;
+    const [accusedFallacyId, setAccusedFallacyId] = useState<string | null>(null);
+    const [selectingAccuser, setSelectingAccuser] = useState(false);
+
+    const handleSignalClick = (fId: string) => {
+        setAccusedFallacyId(fId);
+        setShowFallacies(false);
+        setSelectingAccuser(true);
+        playFallacySound();
+    };
+
+    const confirmSignal = (accuserId: string) => {
+        if (accusedFallacyId) {
+            onSignalFallacyWithAccuser(accusedFallacyId, accuserId);
+            setAccusedFallacyId(null);
+            setSelectingAccuser(false);
+        }
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1.5rem', position: 'relative', width: '100%', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.5s ease' }}>
@@ -156,8 +173,55 @@ export default function MesaDebateView({
 
             {showFallacies && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, background: 'rgba(0,0,0,0.9)' }}>
-                    {/* Reutilizamos el panel pero a gran escala para mesa */}
-                    <FallacyPanel onClose={() => setShowFallacies(false)} onSignal={onSignalFallacy} />
+                    {/* Panel de falacias */}
+                    <FallacyPanel onClose={() => setShowFallacies(false)} onSignal={handleSignalClick} />
+                </div>
+            )}
+
+            {selectingAccuser && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10000, background: 'rgba(10, 10, 12, 0.98)', backdropFilter: 'blur(15px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', textAlign: 'center' }}>
+                    <h2 style={{ fontSize: '3rem', color: 'var(--accent-color)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '2px' }}>¿Quién detectó la falacia?</h2>
+                    <p style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', marginBottom: '3rem' }}>Buscamos al dueño del punto.</p>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', width: '100%', maxWidth: '800px' }}>
+                        {room.players
+                            .filter(p => p.id !== (round.activeSpeaker === "debatiente_a" ? round.debatienteA_Id : round.debatienteB_Id))
+                            .map(p => (
+                                <button
+                                    key={p.id}
+                                    onClick={() => confirmSignal(p.id)}
+                                style={{
+                                    padding: '2rem',
+                                    backgroundColor: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    color: 'white',
+                                    borderRadius: 'var(--radius-md)',
+                                    fontSize: '1.5rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'var(--accent-color)';
+                                    e.currentTarget.style.transform = 'translateY(-5px)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }}
+                            >
+                                {p.name}
+                            </button>
+                        ))}
+                    </div>
+
+                    <button 
+                        onClick={() => setSelectingAccuser(false)}
+                        style={{ marginTop: '4rem', background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: '1.2rem', textDecoration: 'underline', cursor: 'pointer' }}
+                    >
+                        Cancelar y volver
+                    </button>
                 </div>
             )}
         </div>

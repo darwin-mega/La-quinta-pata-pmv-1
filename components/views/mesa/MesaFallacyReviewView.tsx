@@ -17,12 +17,15 @@ export default function MesaFallacyReviewView({
     const fallacyDef = fallacies.find(f => f.id === challenge.fallacyId);
     const speakerId = round.activeSpeaker === "debatiente_a" ? round.debatienteA_Id : round.debatienteB_Id;
     const speaker = room.players.find(p => p.id === speakerId);
+    const accuser = room.players.find(p => p.id === challenge.accuserId);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', width: '100%', maxWidth: '900px', margin: '0 auto', animation: 'fadeIn 0.5s ease' }}>
             <div style={{ textAlign: 'center', background: 'var(--danger-color)', color: 'white', padding: '2rem', borderRadius: 'var(--radius-md)', boxShadow: '0 10px 30px rgba(239, 68, 68, 0.4)' }}>
                 <h1 style={{ fontSize: '3rem', margin: 0, textTransform: 'uppercase', lineHeight: 1.1, fontWeight: 900 }}>¡DEBATE PAUSADO!</h1>
-                <p style={{ margin: '1rem 0 0', fontWeight: 'bold', fontSize: '1.5rem' }}>Alguien señaló una trampa en el argumento de {speaker?.name}.</p>
+                <p style={{ margin: '1rem 0 0', fontWeight: 'bold', fontSize: '1.5rem', opacity: 0.9 }}>
+                    <span style={{ color: 'var(--warning-color)' }}>{accuser?.name}</span> señaló una trampa en el argumento de {speaker?.name}.
+                </p>
             </div>
 
             <div className="glass-panel" style={{ padding: '3rem', borderLeft: '8px solid var(--warning-color)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
