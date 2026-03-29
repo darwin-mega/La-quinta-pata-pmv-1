@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { Room } from "@/lib/store";
@@ -18,30 +18,41 @@ export default function MesaPage() {
     const roomId = params.roomId as string;
     const [room, setRoom] = useState<Room | null>(null);
     const [loading, setLoading] = useState(true);
+    const [connectionError, setConnectionError] = useState(false);
+    const consecutiveErrors = useRef(0);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Polling logic
-    useEffect(() => {
-        let interval: ReturnType<typeof setInterval>;
-
-        const fetchState = async () => {
-            try {
-                const res = await fetch(`/api/room/${roomId}/state`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setRoom(data.room);
-                }
-            } catch (err) {
-                console.error("Error fetching room sync:", err);
-            } finally {
-                if (loading) setLoading(false);
+    // Polling logic — stable interval
+    const fetchState = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/room/${roomId}/state`, {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache, no-store' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setRoom(data.room);
+                setConnectionError(false);
+                consecutiveErrors.current = 0;
+            } else if (res.status === 404) {
+                consecutiveErrors.current += 1;
+                if (consecutiveErrors.current >= 3) setConnectionError(true);
             }
+        } catch (err) {
+            consecutiveErrors.current += 1;
+            if (consecutiveErrors.current >= 4) setConnectionError(true);
+        } finally {
+            setLoading(prev => prev ? false : prev);
+        }
+    }, [roomId]);
+
+    useEffect(() => {
+        fetchState();
+        intervalRef.current = setInterval(fetchState, 2000);
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
         };
-
-        fetchState(); // initial fetch
-        interval = setInterval(fetchState, 2000); // Poll every 2 seconds
-
-        return () => clearInterval(interval);
-    }, [roomId, loading]);
+    }, [fetchState]);
 
     const dispatchAction = async (action: string, payload: any = {}) => {
         try {
@@ -56,8 +67,27 @@ export default function MesaPage() {
         }
     };
 
-    if (loading) return <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Cargando tablero...</div>;
-    if (!room) return <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Sala no encontrada</div>;
+    if (loading) return (
+        <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid #3b82f6', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+            <span style={{ color: 'var(--text-secondary)' }}>Conectando al tablero de mesa...</span>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+    );
+    if (!room) return (
+        <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem' }}>📡</div>
+            <h2 style={{ color: 'white' }}>{connectionError ? 'Sala no encontrada' : 'Reconectando...'}</h2>
+            <p style={{ color: 'var(--text-secondary)', maxWidth: '300px' }}>
+                {connectionError ? 'La sala expiró o el código es incorrecto.' : 'Intentando conectar...'}
+            </p>
+            {connectionError && (
+                <button onClick={() => router.push('/')} style={{ padding: '1rem 2rem', background: 'var(--accent-color)', color: 'white', border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 700, cursor: 'pointer' }}>
+                    Volver al inicio
+                </button>
+            )}
+        </div>
+    );
 
     if (room.mode !== "mesa") {
         return (

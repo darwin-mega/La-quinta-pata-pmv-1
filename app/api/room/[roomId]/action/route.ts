@@ -249,23 +249,28 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                 const round = room.rounds[room.currentRoundIndex];
                 if (!round.activeChallenge) return NextResponse.json({ error: "No active challenge" }, { status: 400 });
 
-                if (vote === "yes" && !round.activeChallenge.yesVotes.includes(playerId) && !round.activeChallenge.noVotes.includes(playerId)) {
-                    round.activeChallenge.yesVotes.push(playerId);
-                } else if (vote === "no" && !round.activeChallenge.noVotes.includes(playerId) && !round.activeChallenge.yesVotes.includes(playerId)) {
-                    round.activeChallenge.noVotes.push(playerId);
+                const isForceMode = vote === "force_accept" || vote === "force_reject" || vote === "resolve_force";
+
+                // Solo registrar votos si NO es un comando de fuerza
+                if (!isForceMode) {
+                    if (vote === "yes" && !round.activeChallenge.yesVotes.includes(playerId) && !round.activeChallenge.noVotes.includes(playerId)) {
+                        round.activeChallenge.yesVotes.push(playerId);
+                    } else if (vote === "no" && !round.activeChallenge.noVotes.includes(playerId) && !round.activeChallenge.yesVotes.includes(playerId)) {
+                        round.activeChallenge.noVotes.push(playerId);
+                    }
                 }
 
                 // El resto de jugadores (no involucrados) son los que votan
-                const expectedVotersCount = Math.max(1, room.players.length - 2); 
+                const expectedVotersCount = Math.max(1, room.players.length - 2);
                 const totalVotes = round.activeChallenge.yesVotes.length + round.activeChallenge.noVotes.length;
 
-                const isForceMode = vote === "resolve_force" || vote === "force_accept" || vote === "force_reject";
-
                 if (totalVotes >= expectedVotersCount || isForceMode) {
-                    const shouldAccept = vote === "force_accept" || (vote !== "force_reject" && round.activeChallenge.yesVotes.length >= round.activeChallenge.noVotes.length);
-                    
-                    const accuser = room.players.find(p => p.id === round.activeChallenge!.accuserId);
-                    const accused = room.players.find(p => p.id === round.activeChallenge!.accusedId);
+                    const shouldAccept = vote === "force_accept" || 
+                        (vote !== "force_reject" && round.activeChallenge.yesVotes.length >= round.activeChallenge.noVotes.length);
+
+                    // Obtener referencias MUTABLES desde room.players
+                    const accuserIndex = room.players.findIndex(p => p.id === round.activeChallenge!.accuserId);
+                    const accusedIndex = room.players.findIndex(p => p.id === round.activeChallenge!.accusedId);
 
                     if (shouldAccept) {
                         const signal: FallacySignal = {
@@ -277,14 +282,17 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
                             timestamp: Date.now()
                         };
                         round.fallaciesSignaled.push(signal);
-                        
-                        // Premiar con 1 punto al acusador y restar 1 al acusado
-                        if (accuser) accuser.score += 1;
-                        if (accused) accused.score = Math.max(0, accused.score - 1);
+
+                        // +1 al que detectó la falacia, -1 al que la cometió
+                        if (accuserIndex !== -1) room.players[accuserIndex].score += 1;
+                        if (accusedIndex !== -1) room.players[accusedIndex].score = Math.max(0, room.players[accusedIndex].score - 1);
                     } else {
-                        // Penalizar al acusador con 1 punto si se equivocó (solo en modo normal)
-                        if (room.mode !== "mesa" && accuser) accuser.score = Math.max(0, accuser.score - 1);
+                        // Solo penalizar en modo normal (no mesa) si la denuncia fue rechazada
+                        if (room.mode !== "mesa" && accuserIndex !== -1) {
+                            room.players[accuserIndex].score = Math.max(0, room.players[accuserIndex].score - 1);
+                        }
                     }
+
                     round.activeChallenge = null;
                     round.turnStartTime = Date.now();
                     await updateRoom(roomId, { state: "debate", rounds: [...room.rounds], players: [...room.players] });

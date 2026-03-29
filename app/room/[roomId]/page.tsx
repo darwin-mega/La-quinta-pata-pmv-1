@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import styles from "./page.module.css";
 import LobbyView from "@/components/views/LobbyView";
@@ -19,6 +19,9 @@ export default function RoomPage() {
     const [playerId, setPlayerId] = useState<string | null>(null);
     const [isHost, setIsHost] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [connectionError, setConnectionError] = useState(false);
+    const consecutiveErrors = useRef(0);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Read local identity on mount
     useEffect(() => {
@@ -28,29 +31,45 @@ export default function RoomPage() {
         if (savedRole === "true") setIsHost(true);
     }, [roomId]);
 
-    // Polling logic
-    useEffect(() => {
-        let interval: ReturnType<typeof setInterval>;
-
-        const fetchState = async () => {
-            try {
-                const res = await fetch(`/api/room/${roomId}/state`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setRoom(data.room);
+    // Polling logic — stable interval, no restart on state changes
+    const fetchState = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/room/${roomId}/state`, {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache, no-store' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setRoom(data.room);
+                setConnectionError(false);
+                consecutiveErrors.current = 0;
+            } else if (res.status === 404) {
+                // Solo mostrar error de sala no encontrada después de 3 intentos fallidos
+                consecutiveErrors.current += 1;
+                if (consecutiveErrors.current >= 3) {
+                    setConnectionError(true);
                 }
-            } catch (err) {
-                console.error("Error fetching room sync:", err);
-            } finally {
-                if (loading) setLoading(false);
             }
+        } catch (err) {
+            // Silently retry — network hiccup or Vercel cold start
+            consecutiveErrors.current += 1;
+            if (consecutiveErrors.current >= 4) {
+                setConnectionError(true);
+            }
+        } finally {
+            setLoading(prev => prev ? false : prev); // Only update if still loading
+        }
+    }, [roomId]);
+
+    useEffect(() => {
+        // Initial fetch
+        fetchState();
+        // Stable polling every 2s — does NOT restart when room state updates
+        intervalRef.current = setInterval(fetchState, 2000);
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
         };
-
-        fetchState(); // initial fetch
-        interval = setInterval(fetchState, 2000); // Poll every 2 seconds
-
-        return () => clearInterval(interval);
-    }, [roomId, loading]);
+    }, [fetchState]);
 
     // Play sound on phase change
     useEffect(() => {
@@ -72,8 +91,32 @@ export default function RoomPage() {
         }
     };
 
-    if (loading) return <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Cargando sala...</div>;
-    if (!room) return <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Sala no encontrada</div>;
+    if (loading) return (
+        <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid var(--accent-color)', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+            <span style={{ color: 'var(--text-secondary)' }}>Conectando a la sala...</span>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+    );
+    if (!room) return (
+        <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem' }}>📡</div>
+            <h2 style={{ color: 'white' }}>{connectionError ? 'Sala no encontrada o expirada' : 'Reconectando...'}</h2>
+            <p style={{ color: 'var(--text-secondary)', maxWidth: '300px' }}>
+                {connectionError
+                    ? 'La sala puede haber expirado (4h de límite) o el código es incorrecto.'
+                    : 'Intentando conectar con el servidor...'}
+            </p>
+            {connectionError && (
+                <button
+                    onClick={() => window.location.href = '/'}
+                    style={{ padding: '1rem 2rem', background: 'var(--accent-color)', color: 'white', border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 700, fontSize: '1rem', cursor: 'pointer' }}
+                >
+                    Volver al inicio
+                </button>
+            )}
+        </div>
+    );
     if (!playerId) return (
         <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <h2>No estás en esta sala</h2>

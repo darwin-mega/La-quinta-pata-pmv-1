@@ -100,8 +100,19 @@ const ROOM_TTL = 60 * 60 * 4; // 4 horas en segundos => Las salas expiran autom�
 export const getRoom = async (id: string): Promise<Room | undefined> => {
     const key = id.toUpperCase();
     if (redis) {
-        const data = await redis.get<Room>(ROOM_KEY(key));
-        return data ?? undefined;
+        try {
+            const data = await redis.get<Room>(ROOM_KEY(key));
+            // Si Redis devuelve algo, actualizar caché local
+            if (data) {
+                globalStore.rooms[key] = data;
+                return data;
+            }
+            return undefined;
+        } catch (err) {
+            console.error('[Redis] getRoom error, using memory fallback:', err);
+            // Fallback a memoria local si Redis falla
+            return globalStore.rooms[key];
+        }
     }
     return globalStore.rooms[key];
 };
@@ -141,10 +152,15 @@ export const createRoom = async (roomData: Omit<Room, "id" | "createdAt">): Prom
 };
 
 export const saveRoom = async (room: Room): Promise<void> => {
+    // Siempre actualizar caché local para tener fallback
+    globalStore.rooms[room.id] = room;
     if (redis) {
-        await redis.set(ROOM_KEY(room.id), JSON.stringify(room), { ex: ROOM_TTL });
-    } else {
-        globalStore.rooms[room.id] = room;
+        try {
+            await redis.set(ROOM_KEY(room.id), JSON.stringify(room), { ex: ROOM_TTL });
+        } catch (err) {
+            console.error('[Redis] saveRoom error:', err);
+            // No lanzar el error — el dato ya está en memoria como fallback
+        }
     }
 };
 
