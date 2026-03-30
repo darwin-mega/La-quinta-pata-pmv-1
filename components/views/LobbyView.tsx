@@ -14,7 +14,7 @@ const MOTIVATIONAL_PHRASES = [
     "Saber pensar vale más que saber atacar."
 ];
 
-export default function LobbyView({ room, isHost, onStart }: { room: Room, isHost: boolean, onStart: () => void }) {
+export default function LobbyView({ room, isHost, onStart, persistenceMode = 'redis' }: { room: Room, isHost: boolean, onStart: () => void, persistenceMode?: 'redis' | 'memory' }) {
     const [randomTip, setRandomTip] = useState(MOTIVATIONAL_PHRASES[0]);
     const [localIp, setLocalIp] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
@@ -48,6 +48,33 @@ export default function LobbyView({ room, isHost, onStart }: { room: Room, isHos
             navigator.clipboard.writeText(joinUrl);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
+    const [isStarting, setIsStarting] = useState(false);
+    
+    useEffect(() => {
+        // Si el estado de la sala cambia ya no estamos iniciando (limpieza preventiva)
+        if (room.state !== 'lobby') {
+            setIsStarting(false);
+        }
+    }, [room.state]);
+
+    const handleStart = async () => {
+        try {
+            setIsStarting(true);
+            import('@/lib/sounds').then(m => m.playButtonSound());
+            
+            // Si después de 4 segundos no ha avanzado de fase, re-habilitamos el botón 
+            // (podría ser un fallo de red o cold start extremo)
+            const timeout = setTimeout(() => {
+                if (room.state === 'lobby') setIsStarting(false);
+            }, 4000);
+
+            onStart();
+        } catch (err) {
+            console.error("Error al iniciar la partida:", err);
+            setIsStarting(false);
         }
     };
 
@@ -147,26 +174,23 @@ export default function LobbyView({ room, isHost, onStart }: { room: Room, isHos
             <div style={{ marginTop: '1rem', width: '100%', maxWidth: '350px' }}>
                 {isHost ? (
                     <button
-                        onClick={() => {
-                            import('@/lib/sounds').then(m => m.playButtonSound());
-                            onStart();
-                        }}
-                        className={room.players.length >= 2 ? "animate-pulse-glow" : ""}
+                        onClick={handleStart}
+                        className={(room.players.length >= 2 && !isStarting) ? "animate-pulse-glow" : ""}
                         style={{
                             width: '100%', padding: '1.25rem',
-                            background: room.players.length < 2 ? 'rgba(255,255,255,0.05)' : 'var(--accent-color)',
+                            background: (room.players.length < 2 || isStarting) ? 'rgba(255,255,255,0.05)' : 'var(--accent-color)',
                             border: 'none',
-                            color: room.players.length < 2 ? 'rgba(255,255,255,0.2)' : 'white',
+                            color: (room.players.length < 2 || isStarting) ? 'rgba(255,255,255,0.2)' : 'white',
                             borderRadius: 'var(--radius-md)', fontSize: '1.2rem', fontWeight: 900,
-                            boxShadow: room.players.length < 2 ? 'none' : '0 8px 30px rgba(255, 94, 58, 0.4)',
+                            boxShadow: (room.players.length < 2 || isStarting) ? 'none' : '0 8px 30px rgba(255, 94, 58, 0.4)',
                             transition: 'all 0.3s',
-                            cursor: room.players.length < 2 ? 'not-allowed' : 'pointer',
+                            cursor: (room.players.length < 2 || isStarting) ? 'not-allowed' : 'pointer',
                             textTransform: 'uppercase',
                             letterSpacing: '0.05em'
                         }}
-                        disabled={room.players.length < 2}
+                        disabled={room.players.length < 2 || isStarting}
                     >
-                        {room.players.length < 2 ? "Esperando Rivales" : "¡SALIR AL RUEDO! ⚡"}
+                        {isStarting ? "INICIANDO..." : room.players.length < 2 ? "Esperando Rivales" : "¡SALIR AL RUEDO! ⚡"}
                     </button>
                 ) : (
                     <div style={{ 

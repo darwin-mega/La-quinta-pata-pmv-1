@@ -19,28 +19,48 @@ export default function JoinRoom() {
         setLoading(true);
         setError('');
 
-        try {
-            const res = await fetch(`/api/room/${roomId}/join`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ playerName })
-            });
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        const performJoin = async (): Promise<boolean> => {
+            try {
+                const res = await fetch(`/api/room/${roomId}/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerName })
+                });
 
-            const data = await res.json();
+                const data = await res.json();
 
-            if (!res.ok) {
-                throw new Error(data.error || 'Error al unirse a la sala');
+                if (!res.ok) {
+                    // Si es un 404, reintentamos un par de veces por si es latencia de persistencia
+                    if (res.status === 404 && attempts < maxAttempts) {
+                        attempts++;
+                        await new Promise(r => setTimeout(r, 400));
+                        return await performJoin();
+                    }
+                    throw new Error(data.error || 'Error al unirse a la sala');
+                }
+
+                // Save identity locally
+                localStorage.setItem(`laJaula_playerId_${roomId}`, data.playerId);
+                localStorage.setItem(`laJaula_isHost_${roomId}`, 'false');
+                router.push(`/room/${roomId}`);
+                return true;
+            } catch (err: any) {
+                if (attempts >= maxAttempts) {
+                    setError(err.message);
+                    setLoading(false);
+                } else {
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 400));
+                    return await performJoin();
+                }
+                return false;
             }
+        };
 
-            // Save identity locally
-            localStorage.setItem(`laJaula_playerId_${roomId}`, data.playerId);
-            localStorage.setItem(`laJaula_isHost_${roomId}`, 'false');
-
-            router.push(`/room/${roomId}`);
-        } catch (err: any) {
-            setError(err.message);
-            setLoading(false);
-        }
+        performJoin();
     };
 
     return (

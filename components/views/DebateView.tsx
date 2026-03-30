@@ -66,6 +66,7 @@ export default function DebateView({
 
     // Derived flags for display
     const bothExhausted = round.timeRemainingA === 0 && round.timeRemainingB === 0;
+    const canSignalFallacy = room.players.length > 2;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem', position: 'relative', paddingBottom: '2rem' }}>
@@ -110,11 +111,11 @@ export default function DebateView({
             {/* AVISO GIGANTE DE HABLA */}
             {isSpeakingState && isActiveSpeaker && (
                 <div className="animate-fade-in" style={{
-                    background: 'linear-gradient(135deg, var(--danger-color) 0%, var(--accent-color) 100%)',
+                    background: 'linear-gradient(135deg, var(--success-color) 0%, #10b981 100%)',
                     color: 'white',
                     padding: '1.2rem',
                     borderRadius: 'var(--radius-md)',
-                    boxShadow: '0 8px 30px rgba(239, 68, 68, 0.4)',
+                    boxShadow: '0 8px 30px rgba(16, 185, 129, 0.4)',
                     border: '1px solid rgba(255,255,255,0.2)'
                 }}>
                     <h1 style={{ fontSize: '2rem', margin: 0, textTransform: 'uppercase', lineHeight: 1, fontWeight: 900 }}>EN EL AIRE 🎙️</h1>
@@ -200,7 +201,7 @@ export default function DebateView({
                     </div>
                 )}
 
-                {!isActiveSpeaker && isSpeakingState && !bothExhausted && (
+                {!isActiveSpeaker && isSpeakingState && !bothExhausted && canSignalFallacy && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                         <button
                             onClick={() => setShowFallacies(true)}

@@ -23,8 +23,8 @@ export default function MesaResolutionView({ room, onShowLeaderboard }: { room: 
         else if (f.accusedId === round.debatienteB_Id) falB++;
     });
 
-    const finalA = Math.max(0, rawA - falA);
-    const finalB = Math.max(0, rawB - falB);
+    const finalA = (rawA - falA > rawB - falB) ? 3 : (rawA - falA === rawB - falB ? 1 : 0);
+    const finalB = (rawB - falB > rawA - falA) ? 3 : (rawB - falB === rawA - falA ? 1 : 0);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', width: '100%', maxWidth: '900px', margin: '0 auto', animation: 'fadeIn 0.5s ease' }}>
@@ -36,7 +36,7 @@ export default function MesaResolutionView({ room, onShowLeaderboard }: { room: 
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '1rem' }}>
-                <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', borderTop: finalA > finalB ? '6px solid var(--success-color)' : '6px solid var(--border-color)', opacity: finalA > finalB ? 1 : 0.8 }}>
+                <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', borderTop: finalA > finalB ? '6px solid var(--success-color)' : (finalA === finalB && finalA > 0 ? '6px solid var(--warning-color)' : '6px solid var(--border-color)'), opacity: finalA > 0 || finalA === finalB ? 1 : 0.8 }}>
                     <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: 700 }}>A FAVOR</div>
                     <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'white', marginBottom: '1.5rem' }}>{pA?.name}</div>
                     
@@ -49,11 +49,11 @@ export default function MesaResolutionView({ room, onShowLeaderboard }: { room: 
                         <span style={{ color: 'var(--danger-color)', fontWeight: 'bold' }}>-{falA}</span>
                     </div>
 
-                    <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700 }}>Puntos Obtenidos</div>
-                    <div style={{ fontSize: '4rem', fontWeight: 900, color: finalA > finalB ? 'var(--success-color)' : 'white' }}>{finalA}</div>
+                    <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700 }}>Bono de Victoria</div>
+                    <div style={{ fontSize: '4rem', fontWeight: 900, color: finalA > 0 ? 'var(--success-color)' : 'white' }}>+{finalA}</div>
                 </div>
 
-                <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', borderTop: finalB > finalA ? '6px solid var(--success-color)' : '6px solid var(--border-color)', opacity: finalB > finalA ? 1 : 0.8 }}>
+                <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', borderTop: finalB > finalA ? '6px solid var(--success-color)' : (finalA === finalB && finalB > 0 ? '6px solid var(--warning-color)' : '6px solid var(--border-color)'), opacity: finalB > 0 || finalA === finalB ? 1 : 0.8 }}>
                     <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: 700 }}>EN CONTRA</div>
                     <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'white', marginBottom: '1.5rem' }}>{pB?.name}</div>
                     
@@ -66,8 +66,8 @@ export default function MesaResolutionView({ room, onShowLeaderboard }: { room: 
                         <span style={{ color: 'var(--danger-color)', fontWeight: 'bold' }}>-{falB}</span>
                     </div>
 
-                    <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700 }}>Puntos Obtenidos</div>
-                    <div style={{ fontSize: '4rem', fontWeight: 900, color: finalB > finalA ? 'var(--success-color)' : 'white' }}>{finalB}</div>
+                    <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700 }}>Bono de Victoria</div>
+                    <div style={{ fontSize: '4rem', fontWeight: 900, color: finalB > 0 ? 'var(--success-color)' : 'white' }}>+{finalB}</div>
                 </div>
             </div>
             

@@ -21,13 +21,19 @@ export default function MesaPage() {
     const [connectionError, setConnectionError] = useState(false);
     const consecutiveErrors = useRef(0);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Polling logic — stable interval
     const fetchState = useCallback(async () => {
+        if (abortControllerRef.current) abortControllerRef.current.abort();
+        abortControllerRef.current = new AbortController();
+        const signal = abortControllerRef.current.signal;
+
         try {
             const res = await fetch(`/api/room/${roomId}/state`, {
                 cache: 'no-store',
-                headers: { 'Cache-Control': 'no-cache, no-store' }
+                headers: { 'Cache-Control': 'no-cache, no-store' },
+                signal
             });
             if (res.ok) {
                 const data = await res.json();
@@ -36,35 +42,65 @@ export default function MesaPage() {
                 consecutiveErrors.current = 0;
             } else if (res.status === 404) {
                 consecutiveErrors.current += 1;
-                if (consecutiveErrors.current >= 3) setConnectionError(true);
+                if (consecutiveErrors.current >= 5) setConnectionError(true);
             }
-        } catch (err) {
+        } catch (err: any) {
+            if (err.name === 'AbortError') return;
             consecutiveErrors.current += 1;
-            if (consecutiveErrors.current >= 4) setConnectionError(true);
+            if (consecutiveErrors.current >= 6) setConnectionError(true);
         } finally {
-            setLoading(prev => prev ? false : prev);
+            setLoading(false);
         }
     }, [roomId]);
 
     useEffect(() => {
         fetchState();
-        intervalRef.current = setInterval(fetchState, 2000);
+        // Sincronización ágil cada 1s
+        intervalRef.current = setInterval(() => fetchState(), 1000);
+
+        const handleVisibility = () => { if (document.visibilityState === 'visible') fetchState(); };
+        const handleFocus = () => fetchState();
+        window.addEventListener('visibilitychange', handleVisibility);
+        window.addEventListener('focus', handleFocus);
+
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
+            if (abortControllerRef.current) abortControllerRef.current.abort();
+            window.removeEventListener('visibilitychange', handleVisibility);
+            window.removeEventListener('focus', handleFocus);
         };
     }, [fetchState]);
 
     const dispatchAction = async (action: string, payload: any = {}) => {
-        try {
-            await fetch(`/api/room/${roomId}/action`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, payload })
-            });
-            // The polling will pick up the resulting state change soon
-        } catch (err) {
-            console.error("Error dispatching action:", err);
-        }
+        let attempts = 0;
+        const maxAttempts = 2;
+
+        const performAction = async () => {
+            try {
+                const res = await fetch(`/api/room/${roomId}/action`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, payload })
+                });
+
+                if (res.ok) {
+                    await fetchState();
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 500));
+                    return await performAction();
+                }
+            } catch (err) {
+                if (attempts < maxAttempts) {
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 500));
+                    return await performAction();
+                }
+                console.error("Error dispatching action:", err);
+            }
+        };
+
+        return performAction();
     };
 
     if (loading) return (
@@ -175,7 +211,27 @@ export default function MesaPage() {
                                 ))}
                             </div>
                             
-                            <button className={styles.primaryButton} onClick={() => dispatchAction("START_GAME")}>
+                            <button 
+                                className={styles.primaryButton} 
+                                onClick={async (e) => {
+                                    const btn = e.currentTarget;
+                                    btn.disabled = true;
+                                    const originalText = btn.innerText;
+                                    btn.innerText = "Iniciando...";
+                                    
+                                    try {
+                                        await dispatchAction("START_GAME");
+                                    } finally {
+                                        // Si no cambió de fase en 3s, permitir reintento
+                                        setTimeout(() => {
+                                            if (btn && document.body.contains(btn)) {
+                                                btn.disabled = false;
+                                                btn.innerText = originalText;
+                                            }
+                                        }, 3000);
+                                    }
+                                }}
+                            >
                                 Iniciar Partida en Mesa
                             </button>
                         </div>

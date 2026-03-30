@@ -16,12 +16,14 @@ export default function RoomPage() {
     const params = useParams();
     const roomId = params.roomId as string;
     const [room, setRoom] = useState<Room | null>(null);
+    const [persistenceMode, setPersistenceMode] = useState<'redis' | 'memory'>('memory');
     const [playerId, setPlayerId] = useState<string | null>(null);
     const [isHost, setIsHost] = useState(false);
     const [loading, setLoading] = useState(true);
     const [connectionError, setConnectionError] = useState(false);
     const consecutiveErrors = useRef(0);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Read local identity on mount
     useEffect(() => {
@@ -31,43 +33,56 @@ export default function RoomPage() {
         if (savedRole === "true") setIsHost(true);
     }, [roomId]);
 
-    // Polling logic — stable interval, no restart on state changes
-    const fetchState = useCallback(async () => {
+    // Polling logic — stable interval
+    const fetchState = useCallback(async (isManual = false) => {
+        if (abortControllerRef.current) abortControllerRef.current.abort();
+        abortControllerRef.current = new AbortController();
+        const signal = abortControllerRef.current.signal;
+
         try {
             const res = await fetch(`/api/room/${roomId}/state`, {
                 cache: 'no-store',
-                headers: { 'Cache-Control': 'no-cache, no-store' }
+                headers: { 'Cache-Control': 'no-cache, no-store' },
+                signal
             });
             if (res.ok) {
                 const data = await res.json();
                 setRoom(data.room);
+                if (data.persistenceMode === "redis" || data.persistenceMode === "memory") {
+                    setPersistenceMode(data.persistenceMode);
+                }
                 setConnectionError(false);
                 consecutiveErrors.current = 0;
             } else if (res.status === 404) {
-                // Solo mostrar error de sala no encontrada después de 3 intentos fallidos
                 consecutiveErrors.current += 1;
-                if (consecutiveErrors.current >= 3) {
-                    setConnectionError(true);
-                }
+                if (consecutiveErrors.current >= 5) setConnectionError(true);
             }
-        } catch (err) {
-            // Silently retry — network hiccup or Vercel cold start
+        } catch (err: any) {
+            if (err.name === 'AbortError') return;
             consecutiveErrors.current += 1;
-            if (consecutiveErrors.current >= 4) {
-                setConnectionError(true);
-            }
+            if (consecutiveErrors.current >= 6) setConnectionError(true);
         } finally {
-            setLoading(prev => prev ? false : prev); // Only update if still loading
+            setLoading(false);
         }
     }, [roomId]);
 
     useEffect(() => {
-        // Initial fetch
         fetchState();
-        // Stable polling every 2s — does NOT restart when room state updates
-        intervalRef.current = setInterval(fetchState, 2000);
+        // Sincronización ágil cada 1s
+        intervalRef.current = setInterval(() => fetchState(), 1000);
+        
+        // Refresco inmediato cuando el usuario vuelve a la pestaña
+        const handleVisibility = () => { if (document.visibilityState === 'visible') fetchState(true); };
+        const handleFocus = () => fetchState(true);
+        
+        window.addEventListener('visibilitychange', handleVisibility);
+        window.addEventListener('focus', handleFocus);
+
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
+            if (abortControllerRef.current) abortControllerRef.current.abort();
+            window.removeEventListener('visibilitychange', handleVisibility);
+            window.removeEventListener('focus', handleFocus);
         };
     }, [fetchState]);
 
@@ -79,16 +94,38 @@ export default function RoomPage() {
     }, [room?.state]);
 
     const dispatchAction = async (action: string, payload: any = {}) => {
-        try {
-            await fetch(`/api/room/${roomId}/action`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, payload: { ...payload, playerId } })
-            });
-            // The polling will pick up the resulting state change soon
-        } catch (err) {
-            console.error("Error dispatching action:", err);
-        }
+        let attempts = 0;
+        const maxAttempts = 2;
+
+        const performAction = async () => {
+            try {
+                // Llamada a la acción
+                const res = await fetch(`/api/room/${roomId}/action`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, payload: { ...payload, playerId } })
+                });
+                
+                // Si la acción fue exitosa, refrescamos el estado INMEDIATAMENTE
+                if (res.ok) {
+                    await fetchState(true);
+                } else if (attempts < maxAttempts) {
+                    // Si el servidor dio un error temporal (5xx o 503), reintentar brevemente
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 500));
+                    return await performAction();
+                }
+            } catch (err) {
+                if (attempts < maxAttempts) {
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 500));
+                    return await performAction();
+                }
+                console.error("Error dispatching action:", err);
+            }
+        };
+
+        return performAction();
     };
 
     if (loading) return (
@@ -158,7 +195,12 @@ export default function RoomPage() {
 
             <main className={styles.roomMain}>
                 {room.state === "lobby" && (
-                    <LobbyView room={room} isHost={isHost} onStart={() => dispatchAction("START_GAME")} />
+                    <LobbyView 
+                        room={room} 
+                        isHost={isHost} 
+                        persistenceMode={persistenceMode}
+                        onStart={() => dispatchAction("START_GAME")} 
+                    />
                 )}
 
                 {room.state === "preparation" && (

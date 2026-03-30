@@ -2,7 +2,15 @@ import { Redis } from "@upstash/redis";
 
 export type GameIntensity = "liviano" | "medio" | "filoso";
 export type GameDuration = "corta" | "larga" | "leyenda";
-export type GameState = "lobby" | "preparation" | "debate" | "fallacy_review" | "voting" | "resolution" | "results" | "finished";
+export type GameState =
+    | "lobby"
+    | "preparation"
+    | "debate"
+    | "fallacy_review"
+    | "voting"
+    | "resolution"
+    | "results"
+    | "finished";
 export type Role = "host" | "debatiente_a" | "debatiente_b" | "jurado";
 
 export type Player = {
@@ -74,63 +82,137 @@ export type Room = {
     createdAt: number;
 };
 
-// ─── Detectar si estamos en producción con Redis disponible ───
-const isRedisAvailable = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+type MaybePromise<T> = T | Promise<T>;
+
+const KV_REST_API_URL =
+    process.env.KV_REST_API_URL ||
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.KV_URL;
+const KV_REST_API_TOKEN =
+    process.env.KV_REST_API_TOKEN ||
+    process.env.UPSTASH_REDIS_REST_TOKEN;
+
+const isRedisAvailable = !!(KV_REST_API_URL && KV_REST_API_TOKEN);
 
 let redis: Redis | null = null;
 if (isRedisAvailable) {
     redis = new Redis({
-        url: process.env.KV_REST_API_URL!,
-        token: process.env.KV_REST_API_TOKEN!,
+        url: KV_REST_API_URL!,
+        token: KV_REST_API_TOKEN!,
     });
+    console.log("[Store] Persistence: REDIS active");
+} else {
+    console.warn("[Store] Persistence: RAM fallback active (Sessions will be lost on Vercel)");
 }
 
-// ─── Fallback: memoria local para desarrollo ───
-const globalStore = global as unknown as { rooms: Record<string, Room> };
+export const getPersistenceStatus = () => (isRedisAvailable ? "redis" : "memory");
+
+const globalStore = global as unknown as {
+    rooms: Record<string, Room>;
+    roomQueues: Map<string, Promise<unknown>>;
+};
+
 if (!globalStore.rooms) {
     globalStore.rooms = {};
 }
 
-// ─── Prefijo para las claves en Redis ───
-const ROOM_KEY = (id: string) => `room:${id.toUpperCase()}`;
-const ROOM_TTL = 60 * 60 * 4; // 4 horas en segundos => Las salas expiran automáticamente
+if (!globalStore.roomQueues) {
+    globalStore.roomQueues = new Map();
+}
 
-// ─── Funciones CRUD (funcionan tanto en local como en producción) ───
+const ROOM_KEY = (id: string) => `lqp:${id.toUpperCase()}`;
+const ROOM_LOCK_KEY = (id: string) => `lqp:lock:${id.toUpperCase()}`;
+const ROOM_TTL = 60 * 60 * 4;
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const withQueuedRoomOperation = async <T>(id: string, task: () => Promise<T>) => {
+    const key = id.toUpperCase();
+    const previous = globalStore.roomQueues.get(key) || Promise.resolve();
+    const current = previous
+        .catch(() => undefined)
+        .then(task);
+
+    globalStore.roomQueues.set(key, current.then(() => undefined, () => undefined));
+    return current;
+};
+
+const acquireRedisRoomLock = async (id: string) => {
+    if (!redis) return null;
+
+    const key = id.toUpperCase();
+    const token = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+    for (let attempt = 0; attempt < 40; attempt++) {
+        const acquired = await redis.set(ROOM_LOCK_KEY(key), token, { nx: true, ex: 5 });
+        if (acquired) return token;
+        await sleep(50);
+    }
+
+    throw new Error(`No se pudo adquirir el lock de la sala ${key}`);
+};
+
+const releaseRedisRoomLock = async (id: string, token: string | null) => {
+    if (!redis || !token) return;
+
+    const key = id.toUpperCase();
+
+    try {
+        const currentToken = await redis.get<string>(ROOM_LOCK_KEY(key));
+        if (currentToken === token) {
+            await redis.del(ROOM_LOCK_KEY(key));
+        }
+    } catch (err) {
+        console.error("[Redis] releaseRoomLock error:", err);
+    }
+};
 
 export const getRoom = async (id: string): Promise<Room | undefined> => {
     const key = id.toUpperCase();
+
     if (redis) {
         try {
             const data = await redis.get<Room>(ROOM_KEY(key));
-            // Si Redis devuelve algo, actualizar caché local
             if (data) {
                 globalStore.rooms[key] = data;
                 return data;
             }
             return undefined;
         } catch (err) {
-            console.error('[Redis] getRoom error, using memory fallback:', err);
-            // Fallback a memoria local si Redis falla
+            console.error("[Redis] getRoom error, using memory fallback:", err);
             return globalStore.rooms[key];
         }
     }
+
     return globalStore.rooms[key];
 };
 
 export const getRooms = async (): Promise<Record<string, Room>> => {
-    // En Redis no listamos todas las salas (no es necesario para el juego).
-    // Solo se usa en desarrollo.
     return globalStore.rooms;
+};
+
+export const saveRoom = async (room: Room): Promise<void> => {
+    const normalizedRoom = { ...room, id: room.id.toUpperCase() };
+
+    globalStore.rooms[normalizedRoom.id] = normalizedRoom;
+
+    if (redis) {
+        try {
+            await redis.set(ROOM_KEY(normalizedRoom.id), JSON.stringify(normalizedRoom), { ex: ROOM_TTL });
+        } catch (err) {
+            console.error("[Redis] saveRoom error:", err);
+        }
+    }
 };
 
 export const createRoom = async (roomData: Omit<Room, "id" | "createdAt">): Promise<Room> => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let id = "";
+
     for (let i = 0; i < 4; i++) {
         id += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
-    // Verificar que no exista
     const existing = await getRoom(id);
     if (existing) {
         return createRoom(roomData);
@@ -139,37 +221,34 @@ export const createRoom = async (roomData: Omit<Room, "id" | "createdAt">): Prom
     const room: Room = {
         ...roomData,
         id,
-        createdAt: Date.now()
+        createdAt: Date.now(),
     };
 
-    if (redis) {
-        await redis.set(ROOM_KEY(id), JSON.stringify(room), { ex: ROOM_TTL });
-    } else {
-        globalStore.rooms[id] = room;
-    }
-
+    await saveRoom(room);
     return room;
 };
 
-export const saveRoom = async (room: Room): Promise<void> => {
-    // Siempre actualizar caché local para tener fallback
-    globalStore.rooms[room.id] = room;
-    if (redis) {
+export const mutateRoom = async <T>(id: string, mutator: (room: Room) => MaybePromise<T>): Promise<T | undefined> => {
+    return withQueuedRoomOperation(id, async () => {
+        const lockToken = await acquireRedisRoomLock(id);
+
         try {
-            await redis.set(ROOM_KEY(room.id), JSON.stringify(room), { ex: ROOM_TTL });
-        } catch (err) {
-            console.error('[Redis] saveRoom error:', err);
-            // No lanzar el error — el dato ya está en memoria como fallback
+            const room = await getRoom(id);
+            if (!room) return undefined;
+
+            const result = await mutator(room);
+            await saveRoom(room);
+            return result;
+        } finally {
+            await releaseRedisRoomLock(id, lockToken);
         }
-    }
+    });
 };
 
 export const updateRoom = async (id: string, updates: Partial<Room>): Promise<void> => {
-    const room = await getRoom(id);
-    if (room) {
-        const updated = { ...room, ...updates };
-        await saveRoom(updated);
-    }
+    await mutateRoom(id, room => {
+        Object.assign(room, updates);
+    });
 };
 
 export const generatePlayerId = () => {
@@ -177,19 +256,22 @@ export const generatePlayerId = () => {
 };
 
 export const syncTimers = (room: Room) => {
-    if (room.state !== "debate" || room.currentRoundIndex < 0 || !room.rounds[room.currentRoundIndex]) return room;
+    if (room.state !== "debate" || room.currentRoundIndex < 0 || !room.rounds[room.currentRoundIndex]) {
+        return room;
+    }
+
     const round = room.rounds[room.currentRoundIndex];
-    if (round.debateState === "finished" || !round.turnStartTime) return room;
+    if (round.debateState === "finished" || !round.turnStartTime) {
+        return room;
+    }
 
     const now = Date.now();
     let elapsedSec = Math.floor((now - round.turnStartTime) / 1000);
 
-    if (round.debateState === "transition") {
-        if (elapsedSec >= round.transitionRemaining) {
-            round.debateState = "speaking";
-            round.turnStartTime = round.turnStartTime + (round.transitionRemaining * 1000);
-            elapsedSec = Math.floor((Date.now() - round.turnStartTime) / 1000);
-        }
+    if (round.debateState === "transition" && elapsedSec >= round.transitionRemaining) {
+        round.debateState = "speaking";
+        round.turnStartTime = round.turnStartTime + (round.transitionRemaining * 1000);
+        elapsedSec = Math.floor((Date.now() - round.turnStartTime) / 1000);
     }
 
     if (round.debateState === "speaking") {
@@ -205,17 +287,15 @@ export const syncTimers = (room: Room) => {
                     round.debateState = "finished";
                 }
             }
-        } else {
-            if (elapsedSec >= round.timeRemainingB) {
-                round.timeRemainingB = 0;
-                if (round.timeRemainingA > 0) {
-                    round.activeSpeaker = "debatiente_a";
-                    round.debateState = "transition";
-                    round.transitionRemaining = 10;
-                    round.turnStartTime = Date.now();
-                } else {
-                    round.debateState = "finished";
-                }
+        } else if (elapsedSec >= round.timeRemainingB) {
+            round.timeRemainingB = 0;
+            if (round.timeRemainingA > 0) {
+                round.activeSpeaker = "debatiente_a";
+                round.debateState = "transition";
+                round.transitionRemaining = 10;
+                round.turnStartTime = Date.now();
+            } else {
+                round.debateState = "finished";
             }
         }
     }

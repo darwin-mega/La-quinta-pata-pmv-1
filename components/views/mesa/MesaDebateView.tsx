@@ -104,7 +104,7 @@ export default function MesaDebateView({
             )}
 
             {isSpeakingState && (
-                <div style={{ background: 'linear-gradient(135deg, var(--danger-color) 0%, var(--accent-color) 100%)', color: 'white', padding: '1.5rem', borderRadius: 'var(--radius-md)', textAlign: 'center', boxShadow: '0 8px 30px rgba(239, 68, 68, 0.4)' }}>
+                <div style={{ background: 'linear-gradient(135deg, var(--success-color) 0%, #10b981 100%)', color: 'white', padding: '1.5rem', borderRadius: 'var(--radius-md)', textAlign: 'center', boxShadow: '0 8px 30px rgba(16, 185, 129, 0.4)' }}>
                     <h1 style={{ fontSize: '2.5rem', margin: 0, textTransform: 'uppercase', lineHeight: 1, fontWeight: 900 }}>¡HABLA {activePlayer?.name.toUpperCase()}!</h1>
                     <p style={{ margin: '0.5rem 0 0', fontWeight: 800, fontSize: '1.2rem' }}>EL RELOJ ESTÁ CORRIENDO</p>
                 </div>

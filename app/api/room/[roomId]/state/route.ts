@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRoom, syncTimers, saveRoom } from "@/lib/store";
+import { getRoom, syncTimers, saveRoom, getPersistenceStatus } from "@/lib/store";
 
 // No caching — always get fresh state
 export const dynamic = 'force-dynamic';
@@ -30,7 +30,7 @@ export async function GET(req: Request, { params }: { params: { roomId: string }
             await saveRoom(room);
         }
 
-        const response = NextResponse.json({ room });
+        const response = NextResponse.json({ room, persistenceMode: getPersistenceStatus() });
         response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
         response.headers.set('Pragma', 'no-cache');
         return response;

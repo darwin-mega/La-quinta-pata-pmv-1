@@ -135,7 +135,9 @@ export default function MesaFallacyReviewView({
                     >
                         ✅ ACEPTAR FALACIA
                         <span style={{ fontSize: '0.9rem', fontWeight: 600, opacity: 0.85 }}>
-                            +1 para {accuser?.name} · -1 para {accused?.name}
+                            {round.fallaciesSignaled.length < 3 
+                                ? `+1 para ${accuser?.name} · -1 para ${accused?.name}` 
+                                : "Puntos al límite por esta ronda (máx 3)"}
                         </span>
                     </button>
                 </div>
