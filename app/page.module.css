@@ -385,7 +385,7 @@
     max-width: 1220px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1rem;
 }
 
@@ -457,6 +457,12 @@
         padding: 1.5rem;
     }
 
+    .mediaColumn {
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+    }
+
     .title {
         max-width: 12ch;
     }
@@ -484,6 +490,29 @@
         gap: 1.2rem;
     }
 
+    .copyColumn {
+        gap: 1rem;
+    }
+
+    .title {
+        max-width: none;
+        font-size: clamp(2.3rem, 10vw, 3.5rem);
+    }
+
+    .description {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .actionStack {
+        max-width: none;
+    }
+
+    .joinPanel,
+    .heroNote {
+        padding: 1rem;
+    }
+
     .statsRow {
         grid-template-columns: 1fr;
     }
@@ -507,8 +536,75 @@
         gap: 1.5rem;
     }
 
+    .trailerCopy {
+        align-items: flex-start;
+    }
+
+    .sectionText {
+        max-width: none;
+    }
+
     .trailerDevice {
         max-width: 300px;
         transform: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .page {
+        gap: 2rem;
+        padding: 0 0.75rem 1.5rem;
+    }
+
+    .hero {
+        border-radius: 20px;
+    }
+
+    .heroContent {
+        padding: 1rem;
+    }
+
+    .kicker {
+        font-size: 0.72rem;
+        padding: 0.45rem 0.85rem;
+    }
+
+    .title {
+        font-size: clamp(2.1rem, 11vw, 3rem);
+        line-height: 0.98;
+    }
+
+    .primaryCta,
+    .secondaryCta,
+    .ghostLink {
+        min-height: 52px;
+    }
+
+    .statCard,
+    .benefitCard {
+        padding: 1rem;
+    }
+
+    .logoShell {
+        padding: 0.8rem;
+    }
+
+    .logoVideo {
+        border-radius: 18px;
+    }
+
+    .trailerFrame {
+        padding: 1rem 0.7rem;
+        border-radius: 24px;
+    }
+
+    .trailerDevice {
+        max-width: 270px;
+        padding: 12px;
+        border-radius: 32px;
+    }
+
+    .trailerVideo {
+        border-radius: 22px;
     }
 }

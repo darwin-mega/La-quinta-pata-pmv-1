@@ -16,6 +16,81 @@
     width: 100%;
 }
 
+.mesaHeader {
+    background: rgba(18, 19, 25, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    gap: 1rem;
+}
+
+.mesaHeaderIdentity {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.mesaHeaderMeta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mesaModeBadge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #3b82f6;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.mesaRoomName {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mesaHeaderActions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.mesaCodeBadge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background-color: rgba(59, 130, 246, 0.1);
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+}
+
+.mesaExitButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
 .dashboard {
     width: 100%;
     max-width: 800px;
@@ -128,4 +203,64 @@
 .primaryButton:hover {
     transform: translateY(-2px);
     background-color: #2563eb;
+}
+
+@media (max-width: 720px) {
+    .mesaMain {
+        padding: 1rem;
+    }
+
+    .mesaHeader {
+        padding: 0.85rem 1rem;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .mesaHeaderIdentity {
+        width: 100%;
+        gap: 0.75rem;
+    }
+
+    .mesaRoomName {
+        font-size: 0.98rem;
+    }
+
+    .mesaHeaderActions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .playersList {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .headerCard {
+        padding: 2rem 1rem;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    .infoGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .infoCard,
+    .playerCard {
+        padding: 1rem;
+    }
+
+    .mesaCodeBadge {
+        max-width: calc(100% - 52px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }

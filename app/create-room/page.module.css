@@ -266,3 +266,51 @@
         min-height: 150px;
     }
 }
+
+@media (max-width: 480px) {
+    .wizardShell {
+        gap: 0.85rem;
+    }
+
+    .backButton {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .stepTitle {
+        font-size: clamp(1.85rem, 9vw, 2.35rem);
+    }
+
+    .modeGrid,
+    .optionGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .modeCard {
+        min-height: 138px;
+        padding: 1.2rem;
+    }
+
+    .modeTitle {
+        font-size: 1.35rem;
+    }
+
+    .countGrid {
+        gap: 0.7rem;
+    }
+
+    .countButton {
+        padding: 1rem 0.75rem;
+        font-size: 1.2rem;
+    }
+
+    .optionButton {
+        padding: 0.95rem 1rem;
+    }
+
+    .primaryButton {
+        width: 100%;
+        min-height: 56px;
+    }
+}

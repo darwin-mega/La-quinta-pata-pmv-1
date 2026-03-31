@@ -4,16 +4,12 @@ import styles from "./page.module.css";
 
 const BENEFITS = [
     {
-        title: "Empieza rapido",
-        description: "Creas sala en segundos, entras por QR y el debate arranca sin configuraciones pesadas.",
+        title: "Divertido de verdad",
+        description: "Turnos cortos, cruces intensos y ritmo real desde el primer minuto.",
     },
     {
-        title: "Temas con ritmo",
-        description: "Puedes dejar que el juego elija o tomar el control y decidir el tema de cada ronda.",
-    },
-    {
-        title: "Ideal para grupo",
-        description: "Funciona para aula, juntada o sobremesa, con modo individual o modo mesa.",
+        title: "Te deja algo mas",
+        description: "No es solo pasarla bien: te hace pensar mejor lo que dices y como lo sostienes.",
     },
 ];
 
@@ -96,13 +92,21 @@ export default function Home() {
                         </div>
 
                         <div className={styles.heroNote}>
-                            <div className={styles.noteTitle}>Ritmo real</div>
-                            <p>
-                                Crea sala, suma jugadores, define intensidad y arranca. Nada de listas eternas antes de jugar.
-                            </p>
+                            <div className={styles.noteTitle}>Al hueso</div>
+                            <p>Divertido de verdad. Te deja algo mas.</p>
                         </div>
                     </div>
                 </div>
+            </section>
+
+            <section className={styles.benefitsSection}>
+                {BENEFITS.map((benefit, index) => (
+                    <article key={benefit.title} className={styles.benefitCard} data-tone={index}>
+                        <div className={styles.benefitIndex}>0{index + 1}</div>
+                        <h3>{benefit.title}</h3>
+                        <p>{benefit.description}</p>
+                    </article>
+                ))}
             </section>
 
             <section id="trailer" className={styles.trailerSection}>
@@ -110,8 +114,7 @@ export default function Home() {
                     <div className={styles.sectionTag}>Trailer</div>
                     <h2 className={`title-serif ${styles.sectionTitle}`}>Mira como se siente una partida</h2>
                     <p className={styles.sectionText}>
-                        Una mezcla de juego social, argumentacion, turnos cortos y decision rapida. Ideal para clase,
-                        grupo de amigos o dinamicas donde nadie tiene paciencia para configurar de mas.
+                        Juego social, argumentacion, turnos cortos y decision rapida. Sin vueltas antes de arrancar.
                     </p>
                 </div>
 
@@ -130,18 +133,8 @@ export default function Home() {
                 </div>
             </section>
 
-            <section className={styles.benefitsSection}>
-                {BENEFITS.map((benefit, index) => (
-                    <article key={benefit.title} className={styles.benefitCard} data-tone={index}>
-                        <div className={styles.benefitIndex}>0{index + 1}</div>
-                        <h3>{benefit.title}</h3>
-                        <p>{benefit.description}</p>
-                    </article>
-                ))}
-            </section>
-
             <footer className={styles.footer}>
-                La Quinta Pata © 2026. Argumentar mejor tambien se entrena.
+                La Quinta Pata (c) 2026. Argumentar mejor tambien se entrena.
             </footer>
         </main>
     );

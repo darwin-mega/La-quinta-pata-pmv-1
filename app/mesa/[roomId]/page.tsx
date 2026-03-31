@@ -162,16 +162,16 @@ export default function MesaPage() {
 
     return (
         <div className={styles.mesaContainer}>
-            <header style={{ background: "rgba(18, 19, 25, 0.8)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--border-color)", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 50 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <header className={styles.mesaHeader}>
+                <div className={styles.mesaHeaderIdentity}>
                     <Logo width={45} />
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#3b82f6", letterSpacing: "2px", textTransform: "uppercase" }}>Modo mesa</span>
-                        <span style={{ fontSize: "1.05rem", fontWeight: 600, color: "white" }}>{room.name}</span>
+                    <div className={styles.mesaHeaderMeta}>
+                        <span className={styles.mesaModeBadge}>Modo mesa</span>
+                        <span className={styles.mesaRoomName}>{room.name}</span>
                     </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    <div style={{ padding: "0.35rem 0.75rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", backgroundColor: "rgba(59, 130, 246, 0.1)", border: "1px solid #3b82f6", color: "#3b82f6" }}>
+                <div className={styles.mesaHeaderActions}>
+                    <div className={styles.mesaCodeBadge}>
                         Codigo: {room.id}
                     </div>
                     <button
@@ -180,10 +180,10 @@ export default function MesaPage() {
                                 router.push("/");
                             }
                         }}
-                        style={{ background: "rgba(255,255,255,0.05)", borderRadius: "50%", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", color: "var(--text-secondary)", cursor: "pointer", border: "none" }}
+                        className={styles.mesaExitButton}
                         title="Salir del tablero"
                     >
-                        ×
+                        X
                     </button>
                 </div>
             </header>
