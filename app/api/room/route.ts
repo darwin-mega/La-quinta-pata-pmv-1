@@ -9,7 +9,7 @@ const VALID_MODES = new Set(["multiplayer", "individual", "mesa"]);
 const VALID_INTENSITIES = new Set(["liviano", "medio", "filoso"]);
 const VALID_TOPIC_SELECTION_MODES = new Set(["automatic", "manual"]);
 const MIN_MESA_PLAYERS = 3;
-const MAX_MESA_PLAYERS = 8;
+const MAX_MESA_PLAYERS = 12;
 const DEFAULT_HOST_NAME = "Anfitrion";
 
 const getDefaultRoomName = (mode: Room["mode"]) => {

@@ -9,7 +9,7 @@ import { getGameDurationLabel, getGameIntensityLabel } from "@/lib/game";
 type PlayMode = "individual" | "mesa";
 type FlowStep = 1 | 2 | 3;
 
-const PLAYER_COUNT_OPTIONS = [3, 4, 5, 6, 7, 8];
+const PLAYER_COUNT_OPTIONS = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const INTENSITY_OPTIONS: GameIntensity[] = ["liviano", "medio", "filoso"];
 const DURATION_OPTIONS: GameDuration[] = ["corta", "larga", "leyenda"];
 const TOPIC_SELECTION_OPTIONS = [

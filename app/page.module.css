@@ -1,80 +1,451 @@
-.homeContainer {
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    gap: var(--spacing-12);
-}
-
-.heroSection {
+.page {
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-4);
+    gap: 4rem;
+    padding: 0 1.5rem 3rem;
+    overflow-x: hidden;
 }
 
-.logo {
-    font-size: 4rem;
-    color: var(--text-primary);
-    margin-bottom: var(--spacing-2);
+.hero {
+    position: relative;
+    width: 100%;
+    max-width: 1220px;
+    margin: 1.5rem auto 0;
+    border-radius: 36px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    min-height: 760px;
+    background:
+        radial-gradient(circle at top left, rgba(255, 94, 58, 0.24), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.22), transparent 34%),
+        #0d0f14;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
 
-.subtitle {
-    font-size: 1.25rem;
-    font-weight: 500;
+.heroBackground {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.23;
+    filter: saturate(1.15) contrast(1.05);
+}
+
+.heroOverlay {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgba(6, 7, 10, 0.88), rgba(10, 12, 18, 0.64)),
+        linear-gradient(to top, rgba(7, 9, 13, 0.88), transparent 50%);
+}
+
+.heroContent {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    gap: 2rem;
+    padding: 3rem;
+    min-height: 760px;
+    align-items: center;
+}
+
+.copyColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+.kicker {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 94, 58, 0.3);
+    background: rgba(255, 94, 58, 0.1);
     color: var(--accent-color);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+}
+
+.title {
+    font-size: clamp(2.8rem, 6vw, 5.25rem);
+    line-height: 0.96;
+    margin: 0;
+    max-width: 10ch;
+    text-wrap: balance;
+}
+
+.titleAccent {
+    display: inline-block;
+    color: #ffd8c7;
 }
 
 .description {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    max-width: 80%;
-    margin: 0 auto;
+    margin: 0;
+    max-width: 620px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 1.08rem;
+    line-height: 1.72;
 }
 
-.actionSection {
+.actionStack {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-4);
-    width: 100%;
-    max-width: 320px;
+    gap: 1rem;
+    max-width: 420px;
 }
 
-.primaryButton {
-    display: block;
-    width: 100%;
-    padding: var(--spacing-4);
-    background-color: var(--accent-color);
+.primaryCta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 58px;
+    padding: 0 1.4rem;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #ff7a55, #ff5e3a);
     color: white;
-    text-align: center;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    font-size: 1.125rem;
-    transition: background-color 0.2s, transform 0.1s;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    box-shadow: 0 14px 36px rgba(255, 94, 58, 0.28);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.primaryButton:hover {
-    background-color: var(--accent-hover);
+.primaryCta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 42px rgba(255, 94, 58, 0.34);
 }
 
-.primaryButton:active {
-    transform: scale(0.98);
+.joinPanel {
+    padding: 1rem;
+    border-radius: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(8, 11, 18, 0.7);
+    backdrop-filter: blur(10px);
 }
 
-.secondaryButton {
+.joinLabel {
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.secondaryLinks {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.secondaryCta,
+.ghostLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 1rem;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.secondaryCta {
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.ghostLink {
+    color: var(--text-secondary);
+    border: 1px dashed rgba(255, 255, 255, 0.14);
+    background: transparent;
+}
+
+.statsRow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
+    max-width: 720px;
+    margin-top: 0.4rem;
+}
+
+.statCard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.statValue {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 900;
+}
+
+.statLabel {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.mediaColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.logoShell {
+    position: relative;
+    padding: 1.1rem;
+    border-radius: 28px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+        rgba(6, 8, 12, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 40px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+}
+
+.logoShell::before {
+    content: "";
+    position: absolute;
+    inset: auto -10% -35% auto;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.24), transparent 70%);
+    filter: blur(12px);
+}
+
+.logoBadge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1;
+    padding: 0.38rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(7, 9, 14, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cfd9ea;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.logoVideo {
     display: block;
     width: 100%;
-    padding: var(--spacing-4);
-    background-color: transparent;
-    color: var(--text-primary);
-    text-align: center;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    font-weight: 500;
-    font-size: 1rem;
-    transition: background-color 0.2s;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 22px;
+    background: #090b11;
 }
 
-.secondaryButton:hover {
-    background-color: var(--surface-hover);
+.heroNote {
+    padding: 1.25rem;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    color: white;
+}
+
+.noteTitle {
+    margin-bottom: 0.45rem;
+    color: #ffd8c7;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.heroNote p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.trailerSection {
+    width: 100%;
+    max-width: 1220px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.trailerCopy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.sectionTag {
+    color: #93c5fd;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.sectionTitle {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 1;
+}
+
+.sectionText {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 1rem;
+    max-width: 44ch;
+}
+
+.trailerFrame {
+    position: relative;
+    padding: 1rem;
+    border-radius: 28px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+}
+
+.trailerVideo {
+    display: block;
+    width: 100%;
+    border-radius: 22px;
+    background: #080a10;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+}
+
+.benefitsSection {
+    width: 100%;
+    max-width: 1220px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.benefitCard {
+    padding: 1.4rem;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.14);
+}
+
+.benefitCard[data-tone="0"] {
+    background: linear-gradient(180deg, rgba(255, 94, 58, 0.08), rgba(255, 255, 255, 0.03));
+}
+
+.benefitCard[data-tone="1"] {
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.08), rgba(255, 255, 255, 0.03));
+}
+
+.benefitCard[data-tone="2"] {
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.08), rgba(255, 255, 255, 0.03));
+}
+
+.benefitIndex {
+    color: rgba(255, 255, 255, 0.34);
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+.benefitCard h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: white;
+}
+
+.benefitCard p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    font-size: 0.96rem;
+}
+
+.footer {
+    margin-top: auto;
+    padding: 1rem 0 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 980px) {
+    .heroContent,
+    .trailerSection,
+    .benefitsSection {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        min-height: auto;
+    }
+
+    .heroContent {
+        min-height: auto;
+        padding: 1.5rem;
+    }
+
+    .title {
+        max-width: 12ch;
+    }
+}
+
+@media (max-width: 720px) {
+    .page {
+        gap: 2.5rem;
+        padding: 0 1rem 2rem;
+    }
+
+    .hero {
+        margin-top: 0.75rem;
+        border-radius: 24px;
+        min-height: auto;
+    }
+
+    .heroContent {
+        padding: 1.2rem;
+        gap: 1.2rem;
+    }
+
+    .statsRow {
+        grid-template-columns: 1fr;
+    }
+
+    .secondaryLinks {
+        flex-direction: column;
+    }
+
+    .secondaryCta,
+    .ghostLink {
+        width: 100%;
+    }
+
+    .logoShell,
+    .trailerFrame,
+    .benefitCard {
+        border-radius: 20px;
+    }
 }
