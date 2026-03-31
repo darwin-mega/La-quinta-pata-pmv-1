@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GameDuration, GameIntensity, createRoom, generatePlayerId, Room } from "@/lib/store";
+import { GameDuration, GameIntensity, TopicSelectionMode, createRoom, generatePlayerId, Room } from "@/lib/store";
 import { setRoomSessionCookie } from "@/lib/session";
 import { buildTopicConfigFromGameIntensity, normalizeTopicConfigInput, validateTopicConfig } from "@/lib/topic-engine";
 import { MAX_HOST_NAME_LENGTH, MAX_PLAYER_NAME_LENGTH, MAX_ROOM_NAME_LENGTH } from "@/lib/topic-types";
@@ -7,6 +7,7 @@ import { MAX_HOST_NAME_LENGTH, MAX_PLAYER_NAME_LENGTH, MAX_ROOM_NAME_LENGTH } fr
 const VALID_DURATIONS = new Set(["corta", "larga", "leyenda"]);
 const VALID_MODES = new Set(["multiplayer", "individual", "mesa"]);
 const VALID_INTENSITIES = new Set(["liviano", "medio", "filoso"]);
+const VALID_TOPIC_SELECTION_MODES = new Set(["automatic", "manual"]);
 const MIN_MESA_PLAYERS = 3;
 const MAX_MESA_PLAYERS = 8;
 const DEFAULT_HOST_NAME = "Anfitrion";
@@ -23,6 +24,7 @@ export async function POST(req: Request) {
             duration,
             hostName,
             intensity,
+            topicSelectionMode,
             mode = "multiplayer",
             playerCount,
             playerNames = [],
@@ -37,6 +39,9 @@ export async function POST(req: Request) {
         const normalizedIntensity = VALID_INTENSITIES.has(intensity)
             ? intensity as GameIntensity
             : "medio";
+        const normalizedTopicSelectionMode = VALID_TOPIC_SELECTION_MODES.has(topicSelectionMode)
+            ? topicSelectionMode as TopicSelectionMode
+            : "automatic";
 
         const requestedRoomName = typeof name === "string" ? name.trim() : "";
         const normalizedRoomName = requestedRoomName || getDefaultRoomName(validatedMode);
@@ -131,6 +136,7 @@ export async function POST(req: Request) {
             intensity: normalizedIntensity,
             duration: validatedDuration,
             topicConfig: derivedTopicConfig,
+            topicSelectionMode: normalizedTopicSelectionMode,
             playerCount: validatedMode === "mesa" ? finalMesaPlayerNames.length : undefined,
             state: "lobby",
             hostId,

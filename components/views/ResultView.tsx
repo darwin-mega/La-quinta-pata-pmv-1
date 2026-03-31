@@ -7,11 +7,13 @@ import { hasGameEnded } from "@/lib/game";
 export default function ResultView({
     room,
     isHost,
-    onNextRound
+    onNextRound,
+    onRestartGame,
 }: {
     room: Room;
     isHost: boolean;
     onNextRound: () => void;
+    onRestartGame: () => void;
 }) {
     const round = room.rounds[room.currentRoundIndex];
     const pA = room.players.find(player => player.id === round.debatienteA_Id);
@@ -48,10 +50,10 @@ export default function ResultView({
                         color: "var(--text-secondary)",
                         marginBottom: "1rem",
                         letterSpacing: "0.05em",
-                        textTransform: "uppercase"
+                        textTransform: "uppercase",
                     }}
                 >
-                    Resolución de Ronda {round.number}
+                    Resolucion de ronda {round.number}
                 </div>
                 <h2
                     className="title-serif"
@@ -59,10 +61,10 @@ export default function ResultView({
                         fontSize: "2.5rem",
                         color: round.winnerId === "empate" ? "var(--warning-color)" : "var(--success-color)",
                         marginBottom: "0.5rem",
-                        textShadow: "0 4px 15px rgba(0,0,0,0.3)"
+                        textShadow: "0 4px 15px rgba(0,0,0,0.3)",
                     }}
                 >
-                    {round.winnerId === "empate" ? "🤝 ¡Empate!" : "🏆 ¡Ganador!"}
+                    {round.winnerId === "empate" ? "Empate" : "Ganador"}
                 </h2>
                 {round.winnerId !== "empate" && (
                     <p style={{ fontSize: "1.2rem", color: "var(--text-secondary)", marginTop: "0.5rem" }}>
@@ -83,17 +85,15 @@ export default function ResultView({
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        background: "linear-gradient(145deg, rgba(239,68,68,0.05) 0%, rgba(59,130,246,0.05) 100%)"
+                        background: "linear-gradient(145deg, rgba(239,68,68,0.05) 0%, rgba(59,130,246,0.05) 100%)",
                     }}
                 >
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", opacity: round.winnerId === pB?.id ? 0.4 : 1, transition: "all 0.3s" }}>
-                        <span style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🔴</span>
                         <span style={{ fontWeight: 700, fontSize: "1.2rem", color: "white" }}>{pA?.name}</span>
                         <span style={{ fontSize: "1rem", color: "var(--text-secondary)" }}>{votesA} votos</span>
                     </div>
                     <div style={{ fontSize: "1.2rem", color: "var(--text-secondary)", fontStyle: "italic", opacity: 0.5 }}>vs</div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", opacity: round.winnerId === pA?.id ? 0.4 : 1, transition: "all 0.3s" }}>
-                        <span style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🔵</span>
                         <span style={{ fontWeight: 700, fontSize: "1.2rem", color: "white" }}>{pB?.name}</span>
                         <span style={{ fontSize: "1rem", color: "var(--text-secondary)" }}>{votesB} votos</span>
                     </div>
@@ -102,8 +102,8 @@ export default function ResultView({
 
             <div className="glass-panel" style={{ padding: "1.5rem", borderTop: "4px solid var(--accent-color)" }}>
                 <h3 style={{ fontSize: "1.1rem", marginBottom: "1.25rem", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "0.85rem", color: "var(--text-secondary)" }}>Ranking Global</span>
-                    <span>📈</span>
+                    <span style={{ textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "0.85rem", color: "var(--text-secondary)" }}>Ranking global</span>
+                    <span>+</span>
                 </h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                     {[...room.players].sort((a, b) => b.score - a.score).map((player, index) => {
@@ -118,7 +118,7 @@ export default function ResultView({
                                     padding: "1rem",
                                     background: isFirst ? "var(--accent-light)" : "rgba(255,255,255,0.02)",
                                     border: isFirst ? "1px solid var(--accent-color)" : "1px solid transparent",
-                                    borderRadius: "var(--radius-md)"
+                                    borderRadius: "var(--radius-md)",
                                 }}
                             >
                                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -133,7 +133,7 @@ export default function ResultView({
                                     </span>
                                     {player.wins > 0 && (
                                         <span style={{ fontSize: "0.75rem", color: "var(--success-color)" }}>
-                                            {player.wins} {player.wins === 1 ? "voto/victoria" : "victorias"}
+                                            {player.wins} {player.wins === 1 ? "victoria" : "victorias"}
                                         </span>
                                     )}
                                 </div>
@@ -145,17 +145,17 @@ export default function ResultView({
 
             <div className="glass-panel" style={{ padding: "1.5rem", background: "rgba(244, 63, 94, 0.05)" }}>
                 <h3 style={{ fontSize: "1rem", marginBottom: "1rem", color: "var(--danger-color)", display: "flex", alignItems: "center", gap: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    ⚠️ Inspección de Lógica
+                    Revision de falacias
                 </h3>
 
                 {totalFallacies === 0 ? (
                     <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>
-                        ¡Un debate muy limpio! No se detectaron trampas discursivas graves.
+                        No se detectaron falacias validadas en esta ronda.
                     </p>
                 ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                         <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginBottom: "0.5rem" }}>
-                            El radar detectó {totalFallacies} posibles fallos argumentativos:
+                            Se registraron {totalFallacies} falacias en total:
                         </p>
                         {Object.entries(fallacyCounts).map(([fallacyId, count]) => {
                             const fallacy = fallacies.find(item => item.id === fallacyId);
@@ -185,28 +185,85 @@ export default function ResultView({
                             fontSize: "1.2rem",
                             fontWeight: 800,
                             boxShadow: "0 8px 25px rgba(255, 94, 58, 0.3)",
-                            transition: "transform 0.2s"
+                            transition: "transform 0.2s",
                         }}
                     >
-                        Siguiente Ronda ⏭
+                        Siguiente ronda
                     </button>
-                    <p style={{ textAlign: "center", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                        O podés salir cerrando desde arriba.
-                    </p>
                 </div>
             ) : isFinalRound ? (
-                <div style={{ textAlign: "center", padding: "1.5rem", background: "var(--surface-color)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                    <p className="animate-fade-in" style={{ color: "var(--warning-color)", fontWeight: 700 }}>
-                        Partida completada. Este es el resultado final.
-                    </p>
-                    <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "0.5rem" }}>
-                        Pueden cerrar la sala cuando quieran desde el botón superior.
-                    </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    <div style={{ textAlign: "center", padding: "1.5rem", background: "var(--surface-color)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+                        <p className="animate-fade-in" style={{ color: "var(--warning-color)", fontWeight: 700 }}>
+                            Partida completada. Este es el resultado final.
+                        </p>
+                        <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                            Desde aca pueden volver al inicio o arrancar otra partida con la misma configuracion.
+                        </p>
+                    </div>
+
+                    {isHost ? (
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                            <button
+                                onClick={() => { window.location.href = "/"; }}
+                                style={{
+                                    padding: "1rem",
+                                    backgroundColor: "transparent",
+                                    color: "var(--text-secondary)",
+                                    borderRadius: "var(--radius-md)",
+                                    border: "1px solid var(--border-color)",
+                                    fontSize: "1rem",
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Volver al inicio
+                            </button>
+                            <button
+                                onClick={onRestartGame}
+                                style={{
+                                    padding: "1rem",
+                                    backgroundColor: "var(--accent-color)",
+                                    color: "white",
+                                    borderRadius: "var(--radius-md)",
+                                    border: "none",
+                                    fontSize: "1rem",
+                                    fontWeight: 800,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Jugar otra vez
+                            </button>
+                        </div>
+                    ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                            <div style={{ textAlign: "center", padding: "1.5rem", background: "var(--surface-color)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+                                <p className="animate-fade-in" style={{ color: "var(--accent-color)", fontWeight: 600 }}>
+                                    Esperando que el host decida si vuelven al inicio o arrancan otra partida...
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => { window.location.href = "/"; }}
+                                style={{
+                                    padding: "1rem",
+                                    backgroundColor: "transparent",
+                                    color: "var(--text-secondary)",
+                                    borderRadius: "var(--radius-md)",
+                                    border: "1px solid var(--border-color)",
+                                    fontSize: "1rem",
+                                    fontWeight: 700,
+                                    cursor: "pointer"
+                                }}
+                            >
+                                Volver al inicio
+                            </button>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div style={{ textAlign: "center", padding: "1.5rem", background: "var(--surface-color)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
                     <p className="animate-fade-in" style={{ color: "var(--accent-color)", fontWeight: 600 }}>
-                        Esperando que el host inicie la próxima ronda...
+                        Esperando que el host inicie la proxima ronda...
                     </p>
                 </div>
             )}

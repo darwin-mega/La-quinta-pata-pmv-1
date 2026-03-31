@@ -22,7 +22,7 @@ export default function RoomSetupSummaryCard({
                     </div>
                 </div>
                 <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>
-                    Los temas se eligen antes de cada ronda
+                    {room.topicSelectionMode === "automatic" ? "Temas automaticos" : "Temas manuales"}
                 </div>
             </div>
 
@@ -43,6 +43,12 @@ export default function RoomSetupSummaryCard({
                     <div style={{ color: "var(--text-secondary)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>Temas guardados</div>
                     <div style={{ color: "white", fontSize: "0.95rem", lineHeight: 1.45, marginTop: "0.2rem" }}>
                         {room.savedTopics.length}
+                    </div>
+                </div>
+                <div>
+                    <div style={{ color: "var(--text-secondary)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>Modo de tema</div>
+                    <div style={{ color: "white", fontSize: "0.95rem", lineHeight: 1.45, marginTop: "0.2rem" }}>
+                        {room.topicSelectionMode === "automatic" ? "Automatico" : "Manual"}
                     </div>
                 </div>
             </div>

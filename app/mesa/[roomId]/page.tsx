@@ -13,7 +13,6 @@ import MesaFallacyReviewView from "@/components/views/mesa/MesaFallacyReviewView
 import MesaVotingView from "@/components/views/mesa/MesaVotingView";
 import MesaResolutionView from "@/components/views/mesa/MesaResolutionView";
 import MesaLeaderboardView from "@/components/views/mesa/MesaLeaderboardView";
-import { getGameDurationLabel, getGameIntensityLabel } from "@/lib/game";
 
 export default function MesaPage() {
     const params = useParams();
@@ -25,6 +24,7 @@ export default function MesaPage() {
     const consecutiveErrors = useRef(0);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const autoStartTriggeredRef = useRef(false);
 
     const fetchState = useCallback(async () => {
         if (abortControllerRef.current) abortControllerRef.current.abort();
@@ -80,6 +80,15 @@ export default function MesaPage() {
             import("@/lib/sounds").then(module => module.playPhaseChangeSound());
         }
     }, [room?.state]);
+
+    useEffect(() => {
+        if (!room || room.mode !== "mesa" || room.state !== "lobby" || autoStartTriggeredRef.current) {
+            return;
+        }
+
+        autoStartTriggeredRef.current = true;
+        void dispatchAction("START_GAME");
+    }, [room]);
 
     const dispatchAction = async (action: string, payload: any = {}) => {
         let attempts = 0;
@@ -181,67 +190,19 @@ export default function MesaPage() {
 
             <main className={styles.mesaMain}>
                 {room.state === "lobby" && (
-                    <div className={styles.dashboard}>
-                        <div className={`glass-panel ${styles.headerCard}`}>
-                            <h1 className={`title-serif ${styles.title}`}>Tablero principal</h1>
-                            <p className={styles.subtitle}>Todo listo para arrancar rapido</p>
+                    <div style={{ width: "100%", maxWidth: "820px", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                        <div className="glass-panel" style={{ padding: "2rem", textAlign: "center" }}>
+                            <h1 className="title-serif" style={{ margin: 0, fontSize: "clamp(2rem, 4vw, 3rem)" }}>
+                                Preparando la mesa
+                            </h1>
+                            <p style={{ margin: "0.75rem 0 0", color: "var(--text-secondary)" }}>
+                                {room.topicSelectionMode === "automatic"
+                                    ? "Estamos entrando directo a la primera ronda."
+                                    : "Estamos abriendo la eleccion manual del tema."}
+                            </p>
                         </div>
 
-                        <div className={styles.infoGrid}>
-                            <div className={styles.infoCard}>
-                                <div className={styles.infoLabel}>Intensidad</div>
-                                <div className={styles.infoValue}>{getGameIntensityLabel(room.intensity)}</div>
-                            </div>
-                            <div className={styles.infoCard}>
-                                <div className={styles.infoLabel}>Largo</div>
-                                <div className={styles.infoValue}>{getGameDurationLabel(room.duration)}</div>
-                            </div>
-                            <div className={styles.infoCard}>
-                                <div className={styles.infoLabel}>Estado</div>
-                                <div className={styles.infoValue}>Esperando inicio</div>
-                            </div>
-                        </div>
-
-                        <div style={{ width: "100%", maxWidth: "980px" }}>
-                            <RoomSetupSummaryCard room={room} accentColor="#3b82f6" title="Configuracion de la mesa" />
-                        </div>
-
-                        <div className="glass-panel" style={{ padding: "2rem" }}>
-                            <h3 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem", color: "white" }}>Jugadores en la mesa ({room.players.length})</h3>
-                            <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Los roles se asignan automaticamente al iniciar.</p>
-
-                            <div className={styles.playersList}>
-                                {room.players.map(player => (
-                                    <div key={player.id} className={styles.playerCard}>
-                                        <div className={styles.playerAvatar}>{player.name.charAt(0).toUpperCase()}</div>
-                                        <div className={styles.playerName}>{player.name}</div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <button
-                                className={styles.primaryButton}
-                                onClick={async (event) => {
-                                    const button = event.currentTarget;
-                                    button.disabled = true;
-                                    const originalText = button.innerText;
-                                    button.innerText = "Abriendo...";
-
-                                    try {
-                                        await dispatchAction("START_GAME");
-                                    } finally {
-                                        setTimeout(() => {
-                                            if (button && document.body.contains(button)) {
-                                                button.disabled = false;
-                                                button.innerText = originalText;
-                                            }
-                                        }, 3000);
-                                    }
-                                }}
-                            >
-                                Elegir tema y empezar
-                            </button>
-                        </div>
+                        <RoomSetupSummaryCard room={room} accentColor="#3b82f6" title="Configuracion de la mesa" />
                     </div>
                 )}
 
@@ -296,6 +257,7 @@ export default function MesaPage() {
                     <MesaLeaderboardView
                         room={room}
                         onNextRound={() => dispatchAction("NEXT_ROUND")}
+                        onRestartGame={() => dispatchAction("RESTART_GAME")}
                     />
                 )}
 

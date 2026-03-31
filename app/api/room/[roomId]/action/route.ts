@@ -3,6 +3,7 @@ import {
     FallacySignal,
     Room,
     Round,
+    TURN_TRANSITION_SEC,
     generatePlayerId,
     mutateRoom,
     syncTimers,
@@ -94,6 +95,15 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
             if (hasGameEnded(room)) {
                 throw new ActionError(409, "La partida ya termino");
             }
+            prepareNextRound(room);
+            return { success: true };
+
+        case "RESTART_GAME":
+            requireHost(isHost);
+            if (room.state !== "results" || !hasGameEnded(room)) {
+                throw new ActionError(409, "La partida todavia no termino");
+            }
+            resetRoomForReplay(room);
             prepareNextRound(room);
             return { success: true };
 
@@ -594,7 +604,7 @@ function prepareNextRound(room: Room) {
         timeRemainingB: timeSecs,
         debateState: "transition",
         activeSpeaker: "debatiente_a",
-        transitionRemaining: 10,
+        transitionRemaining: TURN_TRANSITION_SEC,
         turnStartTime: null,
         votes: {},
         secondaryVotes: {},
@@ -604,6 +614,27 @@ function prepareNextRound(room: Room) {
     });
 
     room.currentRoundIndex += 1;
+    const round = getCurrentRound(room);
+
+    if (room.topicSelectionMode === "automatic") {
+        const nextTopicSelection = getRandomTopicByGameIntensity(room.intensity, room.usedTopics);
+        if (!nextTopicSelection.topic || nextTopicSelection.totalPoolSize === 0) {
+            throw new ActionError(400, "No hay temas aleatorios disponibles para esta intensidad.");
+        }
+
+        if (nextTopicSelection.recycled) {
+            room.usedTopics = [];
+        }
+
+        room.usedTopics.push(nextTopicSelection.topic.id);
+        round.topicId = nextTopicSelection.topic.id;
+        round.topic = nextTopicSelection.topic;
+        round.roundTopic = "random";
+        round.selectedTopic = nextTopicSelection.topic.id;
+        room.state = "preparation";
+        return;
+    }
+
     room.state = "topic_selection";
 }
 
@@ -623,6 +654,19 @@ function saveUserTopic(room: Room, text: string) {
 
     room.savedTopics.unshift(savedTopic);
     return savedTopic;
+}
+
+function resetRoomForReplay(room: Room) {
+    room.players = room.players.map(player => ({
+        ...player,
+        role: player.id === room.hostId ? "host" : "jurado",
+        score: 0,
+        wins: 0,
+    }));
+    room.rounds = [];
+    room.currentRoundIndex = -1;
+    room.usedTopics = [];
+    room.state = "lobby";
 }
 
 function consumeSpeakingTime(round: Round) {
@@ -657,7 +701,7 @@ function moveToNextSpeaker(round: Round) {
         if (round.timeRemainingB > 0) {
             round.activeSpeaker = "debatiente_b";
             round.debateState = "transition";
-            round.transitionRemaining = 10;
+            round.transitionRemaining = TURN_TRANSITION_SEC;
             round.turnStartTime = Date.now();
         } else {
             round.debateState = "finished";
@@ -669,7 +713,7 @@ function moveToNextSpeaker(round: Round) {
     if (round.timeRemainingA > 0) {
         round.activeSpeaker = "debatiente_a";
         round.debateState = "transition";
-        round.transitionRemaining = 10;
+        round.transitionRemaining = TURN_TRANSITION_SEC;
         round.turnStartTime = Date.now();
     } else {
         round.debateState = "finished";

@@ -5,6 +5,7 @@ import { DebateTopic, RoomTopicConfig, SavedTopic } from "@/lib/topic-types";
 
 export type GameIntensity = "liviano" | "medio" | "filoso";
 export type GameDuration = "corta" | "larga" | "leyenda";
+export const TURN_TRANSITION_SEC = 3;
 export type GameState =
     | "lobby"
     | "topic_selection"
@@ -52,6 +53,7 @@ export type TurnPhase = {
 
 export type DebateState = "transition" | "speaking" | "finished";
 export type RoundTopicMode = "random" | "custom" | "saved";
+export type TopicSelectionMode = "automatic" | "manual";
 
 export type Round = {
     number: number;
@@ -82,6 +84,7 @@ export type Room = {
     intensity: GameIntensity;
     duration: GameDuration;
     topicConfig: RoomTopicConfig;
+    topicSelectionMode: TopicSelectionMode;
     playerCount?: number;
     state: GameState;
     hostId: string;
@@ -147,6 +150,7 @@ const hydrateRoom = (room: Room): Room => {
         ...room,
         topicConfig: normalizedTopicConfig,
         intensity: room.intensity || deriveLegacyGameIntensity(normalizedTopicConfig),
+        topicSelectionMode: room.topicSelectionMode === "automatic" ? "automatic" : "manual",
         playerCount: room.mode === "mesa"
             ? (typeof room.playerCount === "number" && room.playerCount > 0 ? room.playerCount : room.players.length)
             : undefined,
@@ -354,7 +358,7 @@ export const syncTimers = (room: Room) => {
                 if (round.timeRemainingB > 0) {
                     round.activeSpeaker = "debatiente_b";
                     round.debateState = "transition";
-                    round.transitionRemaining = 10;
+                    round.transitionRemaining = TURN_TRANSITION_SEC;
                     round.turnStartTime = Date.now();
                 } else {
                     round.debateState = "finished";
@@ -365,7 +369,7 @@ export const syncTimers = (room: Room) => {
             if (round.timeRemainingA > 0) {
                 round.activeSpeaker = "debatiente_a";
                 round.debateState = "transition";
-                round.transitionRemaining = 10;
+                round.transitionRemaining = TURN_TRANSITION_SEC;
                 round.turnStartTime = Date.now();
             } else {
                 round.debateState = "finished";

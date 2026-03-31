@@ -12,6 +12,10 @@ type FlowStep = 1 | 2 | 3;
 const PLAYER_COUNT_OPTIONS = [3, 4, 5, 6, 7, 8];
 const INTENSITY_OPTIONS: GameIntensity[] = ["liviano", "medio", "filoso"];
 const DURATION_OPTIONS: GameDuration[] = ["corta", "larga", "leyenda"];
+const TOPIC_SELECTION_OPTIONS = [
+    { id: "automatic", title: "Automatico", description: "El juego elige los temas" },
+    { id: "manual", title: "Manual", description: "Ustedes eligen los temas" },
+] as const;
 
 const MODE_OPTIONS: Array<{
     id: PlayMode;
@@ -39,6 +43,7 @@ export default function CreateRoom() {
     const [playerCount, setPlayerCount] = useState<number | undefined>(undefined);
     const [intensity, setIntensity] = useState<GameIntensity>("medio");
     const [duration, setDuration] = useState<GameDuration>("corta");
+    const [topicSelectionMode, setTopicSelectionMode] = useState<"automatic" | "manual">("automatic");
 
     const handleModeSelect = (nextMode: PlayMode) => {
         setError("");
@@ -93,6 +98,7 @@ export default function CreateRoom() {
                 playerCount: playMode === "mesa" ? playerCount : undefined,
                 intensity,
                 duration,
+                topicSelectionMode,
             };
 
             const response = await fetch("/api/room", {
@@ -202,6 +208,23 @@ export default function CreateRoom() {
                                             className={`${styles.optionButton} ${duration === option ? styles.optionButtonActive : ""}`}
                                         >
                                             {getGameDurationLabel(option)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className={styles.optionGroup}>
+                                <span className={styles.groupLabel}>Temas</span>
+                                <div className={styles.optionGrid}>
+                                    {TOPIC_SELECTION_OPTIONS.map(option => (
+                                        <button
+                                            key={option.id}
+                                            type="button"
+                                            onClick={() => setTopicSelectionMode(option.id)}
+                                            className={`${styles.optionButton} ${topicSelectionMode === option.id ? styles.optionButtonActive : ""}`}
+                                        >
+                                            <span className={styles.optionTitle}>{option.title}</span>
+                                            <span className={styles.optionDescription}>{option.description}</span>
                                         </button>
                                     ))}
                                 </div>

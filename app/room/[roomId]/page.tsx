@@ -243,7 +243,12 @@ export default function RoomPage() {
                 )}
 
                 {room.state === "results" && (
-                    <ResultView room={room} isHost={isHost} onNextRound={() => dispatchAction("NEXT_ROUND")} />
+                    <ResultView
+                        room={room}
+                        isHost={isHost}
+                        onNextRound={() => dispatchAction("NEXT_ROUND")}
+                        onRestartGame={() => dispatchAction("RESTART_GAME")}
+                    />
                 )}
             </main>
         </div>

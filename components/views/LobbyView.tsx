@@ -144,11 +144,19 @@ export default function LobbyView({
                         }}
                         disabled={room.players.length < 2 || isStarting}
                     >
-                        {isStarting ? "ABRIENDO..." : room.players.length < 2 ? "Esperando rivales" : "Elegir tema y empezar"}
+                        {isStarting
+                            ? "ABRIENDO..."
+                            : room.players.length < 2
+                                ? "Esperando rivales"
+                                : room.topicSelectionMode === "automatic"
+                                    ? "Empezar partida"
+                                    : "Elegir tema y empezar"}
                     </button>
                 ) : (
                     <div style={{ padding: "1.25rem", background: "rgba(255, 94, 58, 0.05)", border: "1px dashed var(--accent-color)", borderRadius: "var(--radius-md)", color: "var(--accent-color)", fontWeight: 700 }}>
-                        El host va a elegir el tema y arrancar.
+                        {room.topicSelectionMode === "automatic"
+                            ? "El host va a iniciar la partida."
+                            : "El host va a elegir el tema y arrancar."}
                     </div>
                 )}
             </div>

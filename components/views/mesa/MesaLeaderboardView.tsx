@@ -3,10 +3,12 @@ import { hasGameEnded } from "@/lib/game";
 
 export default function MesaLeaderboardView({
     room,
-    onNextRound
+    onNextRound,
+    onRestartGame,
 }: {
     room: Room;
     onNextRound: () => void;
+    onRestartGame: () => void;
 }) {
     const sortedPlayers = [...room.players].sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
@@ -18,10 +20,10 @@ export default function MesaLeaderboardView({
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem", width: "100%", maxWidth: "800px", margin: "0 auto", animation: "fadeIn 0.5s ease", textAlign: "center" }}>
             <div style={{ marginBottom: "1rem" }}>
                 <h1 style={{ fontSize: "3rem", margin: 0, textTransform: "uppercase", fontWeight: 900, color: "var(--warning-color)", textShadow: "0 4px 10px rgba(0,0,0,0.5)" }}>
-                    Tabla de Posiciones
+                    Tabla de posiciones
                 </h1>
                 <p style={{ color: "var(--text-secondary)", fontSize: "1.2rem", marginTop: "0.5rem" }}>
-                    Acumulado después de {room.currentRoundIndex + 1} ronda(s)
+                    Acumulado despues de {room.currentRoundIndex + 1} ronda(s)
                 </p>
             </div>
 
@@ -40,7 +42,7 @@ export default function MesaLeaderboardView({
                         </div>
 
                         <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "white", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            {player.name} {index === 0 && "👑"}
+                            {player.name} {index === 0 && "Lider"}
                         </div>
 
                         <div style={{ textAlign: "center", fontSize: "1.2rem", color: "var(--text-secondary)" }}>
@@ -54,34 +56,41 @@ export default function MesaLeaderboardView({
                 ))}
             </div>
 
-            {isFinalRound ? (
+            {isFinalRound && (
                 <div style={{ padding: "1.5rem", background: "var(--surface-color)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
                     <p style={{ color: "var(--warning-color)", fontWeight: 700, margin: 0 }}>
                         Partida completada. Esta tabla ya es definitiva.
                     </p>
                     <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginTop: "0.5rem" }}>
-                        Podés terminar la partida cuando quieran.
+                        Desde aca pueden volver al inicio o empezar otra partida con la misma configuracion.
                     </p>
                 </div>
-            ) : null}
+            )}
 
-            <div style={{ display: "grid", gridTemplateColumns: isFinalRound ? "1fr" : "1fr 1fr", gap: "1.5rem", marginTop: "2rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: isFinalRound ? "1fr 1fr" : "1fr 1fr", gap: "1.5rem", marginTop: "2rem" }}>
                 <button
                     onClick={() => {
-                        if (confirm("¿Seguro quieres terminar la partida y volver al inicio?")) {
+                        if (confirm("Seguro quieres volver al inicio?")) {
                             window.location.href = "/";
                         }
                     }}
                     style={{ padding: "1.5rem", backgroundColor: "transparent", border: "2px solid var(--danger-color)", color: "var(--danger-color)", borderRadius: "var(--radius-md)", fontSize: "1.2rem", fontWeight: 800, cursor: "pointer", transition: "all 0.2s" }}
                 >
-                    Terminar Partida
+                    Volver al inicio
                 </button>
-                {!isFinalRound && (
+                {isFinalRound ? (
+                    <button
+                        onClick={onRestartGame}
+                        style={{ padding: "1.5rem", backgroundColor: "var(--accent-color)", border: "none", color: "white", borderRadius: "var(--radius-md)", fontSize: "1.3rem", fontWeight: 900, cursor: "pointer", boxShadow: "0 10px 30px rgba(255, 94, 58, 0.4)", transition: "all 0.2s" }}
+                    >
+                        Jugar otra vez
+                    </button>
+                ) : (
                     <button
                         onClick={onNextRound}
                         style={{ padding: "1.5rem", backgroundColor: "var(--success-color)", border: "none", color: "white", borderRadius: "var(--radius-md)", fontSize: "1.5rem", fontWeight: 900, cursor: "pointer", boxShadow: "0 10px 30px rgba(16, 185, 129, 0.4)", transition: "all 0.2s" }}
                     >
-                        Siguiente Debate ⏭
+                        Siguiente debate
                     </button>
                 )}
             </div>
