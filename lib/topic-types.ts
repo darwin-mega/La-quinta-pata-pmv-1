@@ -31,6 +31,7 @@ export type TopicIntensity = typeof TOPIC_INTENSITY_OPTIONS[number]["id"];
 export type TopicMode = typeof TOPIC_MODE_OPTIONS[number]["id"];
 export type TopicSource = "system" | "custom";
 export type TopicMixStrategy = "balanced";
+export type SavedTopicSource = "user" | "curated";
 
 export type DebateTopic = {
     id: string;
@@ -50,6 +51,16 @@ export type DebateTopic = {
 export type CustomTopicInput = {
     id: string;
     text: string;
+    category?: string;
+    intensity?: TopicIntensity;
+};
+
+export type SavedTopic = {
+    id: string;
+    text: string;
+    createdAt: number;
+    lastUsedAt?: number;
+    source: SavedTopicSource;
     category?: string;
     intensity?: TopicIntensity;
 };

@@ -7,6 +7,7 @@ import {
     MAX_CUSTOM_TOPIC_LENGTH,
     MIN_CUSTOM_TOPICS,
     RoomTopicConfig,
+    SavedTopic,
     TOPIC_CATEGORY_OPTIONS,
     TOPIC_INTENSITY_OPTIONS,
     TOPIC_MODE_OPTIONS,
@@ -18,6 +19,13 @@ import {
 const TOPIC_CATEGORY_IDS = new Set<string>(TOPIC_CATEGORY_OPTIONS.map(category => category.id));
 const TOPIC_INTENSITY_IDS = new Set<string>(TOPIC_INTENSITY_OPTIONS.map(intensity => intensity.id));
 const TOPIC_MODE_IDS = new Set<string>(TOPIC_MODE_OPTIONS.map(mode => mode.id));
+const GAME_INTENSITY_MAP = {
+    liviano: ["baja"],
+    medio: ["media"],
+    filoso: ["alta", "muy_alta"],
+} as const;
+
+type GameIntensityPreference = keyof typeof GAME_INTENSITY_MAP;
 
 const normalizeText = (value: string) => value.trim().replace(/\s+/g, " ");
 
@@ -78,6 +86,20 @@ const buildCustomDebateTopic = (topic: CustomTopicInput): DebateTopic => {
         ],
         enabled: true,
     };
+};
+
+const createGeneratedTopicId = (prefix: string, text: string) => {
+    const slug = normalizeText(text)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 48);
+
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+        return `${prefix}-${slug || "tema"}-${crypto.randomUUID()}`;
+    }
+
+    return `${prefix}-${slug || "tema"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 };
 
 export const getTopicCategoryLabel = (categoryId: string) => {
@@ -145,6 +167,22 @@ export const normalizeTopicConfigInput = (input: unknown): RoomTopicConfig => {
     };
 };
 
+export const normalizeTopicText = (value: string) => normalizeText(value);
+
+export const getTopicIntensitiesForGameIntensity = (intensity: GameIntensityPreference): TopicIntensity[] => {
+    return [...GAME_INTENSITY_MAP[intensity]];
+};
+
+export const getTopicIntensityForGameIntensity = (intensity: GameIntensityPreference): TopicIntensity => {
+    return getTopicIntensitiesForGameIntensity(intensity)[0];
+};
+
+export const buildTopicConfigFromGameIntensity = (intensity: GameIntensityPreference): RoomTopicConfig => ({
+    ...DEFAULT_ROOM_TOPIC_CONFIG,
+    mode: "system",
+    selectedIntensities: getTopicIntensitiesForGameIntensity(intensity),
+});
+
 export const filterSystemTopics = (config: RoomTopicConfig) => {
     const categoryFilter = config.selectedCategories.length > 0
         ? new Set(config.selectedCategories)
@@ -197,6 +235,59 @@ export const getNextTopicFromPool = (config: RoomTopicConfig, usedTopicIds: stri
         recycled,
         totalPoolSize: pool.length,
     };
+};
+
+export const getRandomTopicByGameIntensity = (intensity: GameIntensityPreference, usedTopicIds: string[]) => {
+    const pool = shuffle(filterSystemTopics(buildTopicConfigFromGameIntensity(intensity)));
+    let availableTopics = pool.filter(topic => !usedTopicIds.includes(topic.id));
+    let recycled = false;
+
+    if (availableTopics.length === 0) {
+        availableTopics = pool;
+        recycled = true;
+    }
+
+    return {
+        topic: availableTopics[0] || null,
+        recycled,
+        totalPoolSize: pool.length,
+    };
+};
+
+export const createUserDebateTopic = (text: string, options: Partial<CustomTopicInput> = {}) => {
+    const normalizedText = normalizeText(text);
+
+    return buildCustomDebateTopic({
+        id: options.id || createGeneratedTopicId("user-topic", normalizedText),
+        text: normalizedText,
+        category: options.category,
+        intensity: options.intensity,
+    });
+};
+
+export const createSavedTopic = (
+    text: string,
+    options: Partial<Omit<SavedTopic, "text" | "source">> & { source?: SavedTopic["source"] } = {}
+): SavedTopic => {
+    const normalizedText = normalizeText(text);
+
+    return {
+        id: options.id || createGeneratedTopicId("saved-topic", normalizedText),
+        text: normalizedText,
+        createdAt: options.createdAt || Date.now(),
+        lastUsedAt: options.lastUsedAt,
+        source: options.source || "user",
+        category: options.category,
+        intensity: options.intensity,
+    };
+};
+
+export const createDebateTopicFromSavedTopic = (topic: SavedTopic) => {
+    return createUserDebateTopic(topic.text, {
+        id: topic.id,
+        category: topic.category,
+        intensity: topic.intensity,
+    });
 };
 
 export const validateTopicConfig = (input: unknown): TopicValidationResult => {

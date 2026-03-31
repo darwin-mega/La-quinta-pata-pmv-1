@@ -9,7 +9,14 @@ import {
 } from "@/lib/store";
 import { hasGameEnded, isTwoPlayerRoom } from "@/lib/game";
 import { readRoomSession, RoomSession } from "@/lib/session";
-import { getNextTopicFromPool } from "@/lib/topic-engine";
+import {
+    createDebateTopicFromSavedTopic,
+    createSavedTopic,
+    createUserDebateTopic,
+    getRandomTopicByGameIntensity,
+    getTopicIntensityForGameIntensity,
+    normalizeTopicText,
+} from "@/lib/topic-engine";
 
 class ActionError extends Error {
     status: number;
@@ -31,7 +38,7 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
         const session = readRoomSession(req, roomId);
 
         if (!session) {
-            return NextResponse.json({ error: "Sesión inválida o expirada" }, { status: 401 });
+            return NextResponse.json({ error: "Sesion invalida o expirada" }, { status: 401 });
         }
 
         const body = await req.json();
@@ -39,7 +46,7 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
         const payload = (body?.payload ?? {}) as ActionPayload;
 
         if (!action) {
-            return NextResponse.json({ error: "Acción inválida" }, { status: 400 });
+            return NextResponse.json({ error: "Accion invalida" }, { status: 400 });
         }
 
         const result = await mutateRoom(roomId, room => {
@@ -67,7 +74,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
     const isHost = session.playerId === room.hostId && session.isHost;
 
     if (!sessionPlayer && !isHost) {
-        throw new ActionError(403, "Tu sesión no corresponde a esta sala");
+        throw new ActionError(403, "Tu sesion no corresponde a esta sala");
     }
 
     switch (action) {
@@ -76,27 +83,97 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
             if (room.state !== "lobby") {
                 throw new ActionError(409, "La partida ya fue iniciada");
             }
-            startNextRound(room);
+            prepareNextRound(room);
             return { success: true };
 
         case "NEXT_ROUND":
             requireHost(isHost);
             if (room.state !== "results") {
-                throw new ActionError(409, "La partida no está lista para una nueva ronda");
+                throw new ActionError(409, "La partida no esta lista para una nueva ronda");
             }
             if (hasGameEnded(room)) {
-                throw new ActionError(409, "La partida ya terminó");
+                throw new ActionError(409, "La partida ya termino");
             }
-            startNextRound(room);
+            prepareNextRound(room);
             return { success: true };
+
+        case "SELECT_ROUND_TOPIC": {
+            requireHost(isHost);
+            if (room.state !== "topic_selection") {
+                throw new ActionError(409, "Esta ronda todavia no esta lista para elegir tema");
+            }
+
+            const round = getCurrentRound(room);
+            const roundTopic = typeof payload.roundTopic === "string" ? payload.roundTopic : "";
+
+            if (!["random", "custom", "saved"].includes(roundTopic)) {
+                throw new ActionError(400, "La forma de elegir tema no es valida");
+            }
+
+            if (roundTopic === "random") {
+                const nextTopicSelection = getRandomTopicByGameIntensity(room.intensity, room.usedTopics);
+                if (!nextTopicSelection.topic || nextTopicSelection.totalPoolSize === 0) {
+                    throw new ActionError(400, "No hay temas aleatorios disponibles para esta intensidad.");
+                }
+
+                if (nextTopicSelection.recycled) {
+                    room.usedTopics = [];
+                }
+
+                room.usedTopics.push(nextTopicSelection.topic.id);
+                round.topicId = nextTopicSelection.topic.id;
+                round.topic = nextTopicSelection.topic;
+                round.roundTopic = "random";
+                round.selectedTopic = nextTopicSelection.topic.id;
+            }
+
+            if (roundTopic === "custom") {
+                const customText = normalizeTopicText(typeof payload.selectedTopic === "string" ? payload.selectedTopic : "");
+                if (!customText) {
+                    throw new ActionError(400, "Escribi un tema antes de continuar");
+                }
+
+                const savedTopic = saveUserTopic(room, customText);
+                round.topicId = savedTopic.id;
+                round.topic = createUserDebateTopic(savedTopic.text, {
+                    id: savedTopic.id,
+                    category: savedTopic.category,
+                    intensity: savedTopic.intensity,
+                });
+                round.roundTopic = "custom";
+                round.selectedTopic = savedTopic.text;
+            }
+
+            if (roundTopic === "saved") {
+                const savedTopicId = typeof payload.selectedTopic === "string" ? payload.selectedTopic : "";
+                const savedTopic = room.savedTopics.find(topic => topic.id === savedTopicId);
+
+                if (!savedTopic) {
+                    throw new ActionError(400, "El tema guardado elegido ya no existe");
+                }
+
+                savedTopic.lastUsedAt = Date.now();
+                round.topicId = savedTopic.id;
+                round.topic = createDebateTopicFromSavedTopic(savedTopic);
+                round.roundTopic = "saved";
+                round.selectedTopic = savedTopic.id;
+            }
+
+            room.state = "preparation";
+            return { success: true };
+        }
 
         case "START_DEBATE": {
             requireHost(isHost);
             if (room.state !== "preparation") {
-                throw new ActionError(409, "La ronda no está en preparación");
+                throw new ActionError(409, "La ronda no esta en preparacion");
             }
 
             const round = getCurrentRound(room);
+            if (!round.topic) {
+                throw new ActionError(409, "Todavia no hay tema elegido para esta ronda");
+            }
+
             round.turnStartTime = Date.now();
             room.state = "debate";
             return { success: true };
@@ -152,7 +229,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
         case "SIGNAL_FALLACY": {
             const round = getCurrentRound(room);
             if (room.state !== "debate" || round.debateState !== "speaking") {
-                throw new ActionError(409, "Solo se pueden señalar falacias durante el debate activo");
+                throw new ActionError(409, "Solo se pueden senalar falacias durante el debate activo");
             }
 
             if (room.mode !== "mesa" && room.players.length < 3) {
@@ -161,7 +238,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
 
             const fallacyId = typeof payload.fallacyId === "string" ? payload.fallacyId : "";
             if (!fallacyId) {
-                throw new ActionError(400, "Falta la falacia señalada");
+                throw new ActionError(400, "Falta la falacia senalada");
             }
 
             const accusedId = round.activeSpeaker === "debatiente_a" ? round.debatienteA_Id : round.debatienteB_Id;
@@ -170,11 +247,11 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
                 : sessionPlayer?.id || "";
 
             if (!accuserId) {
-                throw new ActionError(403, "No se pudo identificar quién señaló la falacia");
+                throw new ActionError(403, "No se pudo identificar quien senalo la falacia");
             }
 
             if (accuserId === accusedId) {
-                throw new ActionError(403, "El debatiente activo no puede acusarse a sí mismo");
+                throw new ActionError(403, "El debatiente activo no puede acusarse a si mismo");
             }
 
             const accuser = room.players.find(player => player.id === accuserId);
@@ -183,7 +260,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
             }
 
             if (room.mode !== "mesa" && (!sessionPlayer || sessionPlayer.id !== accuserId)) {
-                throw new ActionError(403, "La señalización no coincide con tu sesión");
+                throw new ActionError(403, "La senalizacion no coincide con tu sesion");
             }
 
             pauseDebateClock(round);
@@ -192,7 +269,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
                 accuserId,
                 accusedId,
                 yesVotes: [],
-                noVotes: []
+                noVotes: [],
             };
             room.state = "fallacy_review";
             return { success: true };
@@ -211,7 +288,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
                 requireHost(isHost);
             } else {
                 if (room.mode === "mesa") {
-                    throw new ActionError(403, "En modo mesa la resolución la hace el conductor");
+                    throw new ActionError(403, "En modo mesa la resolucion la hace el conductor");
                 }
 
                 if (!sessionPlayer) {
@@ -224,7 +301,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
                 }
 
                 if (vote !== "yes" && vote !== "no") {
-                    throw new ActionError(400, "Voto de falacia inválido");
+                    throw new ActionError(400, "Voto de falacia invalido");
                 }
 
                 if (
@@ -257,7 +334,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
         case "VOTE": {
             const round = getCurrentRound(room);
             if (room.state !== "voting") {
-                throw new ActionError(409, "La sala no está en etapa de votación");
+                throw new ActionError(409, "La sala no esta en etapa de votacion");
             }
 
             if (!sessionPlayer) {
@@ -272,7 +349,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
             const reason = typeof payload.reason === "string" ? payload.reason : "";
 
             if (votedForId !== round.debatienteA_Id && votedForId !== round.debatienteB_Id) {
-                throw new ActionError(400, "Voto inválido");
+                throw new ActionError(400, "Voto invalido");
             }
 
             const existingVote = round.votes[sessionPlayer.id];
@@ -299,7 +376,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
         case "VOTE_RESOLUTION": {
             const round = getCurrentRound(room);
             if (room.state !== "resolution" || !isTwoPlayerRoom(room)) {
-                throw new ActionError(409, "Esta ronda no usa resolución directa");
+                throw new ActionError(409, "Esta ronda no usa resolucion directa");
             }
 
             if (!sessionPlayer) {
@@ -308,7 +385,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
 
             const vote = typeof payload.vote === "string" ? payload.vote : "";
             if (!["A", "B", "empate"].includes(vote)) {
-                throw new ActionError(400, "Voto de resolución inválido");
+                throw new ActionError(400, "Voto de resolucion invalido");
             }
 
             if (!round.resolutionVotes) {
@@ -332,7 +409,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
         case "SUBMIT_MESA_VOTES": {
             requireHost(isHost);
             if (room.mode !== "mesa" || room.state !== "voting") {
-                throw new ActionError(409, "La mesa no está lista para resolver votos");
+                throw new ActionError(409, "La mesa no esta lista para resolver votos");
             }
 
             const round = getCurrentRound(room);
@@ -397,7 +474,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
         case "SHOW_LEADERBOARD":
             requireHost(isHost);
             if (room.mode !== "mesa" || room.state !== "resolution") {
-                throw new ActionError(409, "La tabla no está disponible todavía");
+                throw new ActionError(409, "La tabla no esta disponible todavia");
             }
             room.state = "results";
             return { success: true };
@@ -405,26 +482,26 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
         case "CLOSE_VOTING":
             requireHost(isHost);
             if (room.state !== "voting" && room.state !== "resolution") {
-                throw new ActionError(409, "No hay votación para cerrar");
+                throw new ActionError(409, "No hay votacion para cerrar");
             }
             if (room.state === "resolution") {
                 const round = getCurrentRound(room);
                 const totalResolutionVotes = Object.keys(round.resolutionVotes || {}).length;
                 if (isTwoPlayerRoom(room) && totalResolutionVotes < 2) {
-                    throw new ActionError(409, "Aún faltan votos de resolución");
+                    throw new ActionError(409, "Aun faltan votos de resolucion");
                 }
             }
             closeVoting(room);
             return { success: true };
 
         default:
-            throw new ActionError(400, "Acción no válida");
+            throw new ActionError(400, "Accion no valida");
     }
 }
 
 function requireHost(isHost: boolean) {
     if (!isHost) {
-        throw new ActionError(403, "Solo el host puede realizar esta acción");
+        throw new ActionError(403, "Solo el host puede realizar esta accion");
     }
 }
 
@@ -444,7 +521,7 @@ function ensureSpeakerControl(
     expectedState: Round["debateState"]
 ) {
     if (room.state !== "debate" || round.debateState !== expectedState) {
-        throw new ActionError(409, "La ronda no está en el estado esperado");
+        throw new ActionError(409, "La ronda no esta en el estado esperado");
     }
 
     if (room.mode === "mesa") {
@@ -460,21 +537,10 @@ function ensureSpeakerControl(
     }
 }
 
-function startNextRound(room: Room) {
+function prepareNextRound(room: Room) {
     if (room.players.length < 2) {
         throw new ActionError(400, "Se necesitan al menos 2 jugadores");
     }
-
-    const nextTopicSelection = getNextTopicFromPool(room.topicConfig, room.usedTopics);
-    if (!nextTopicSelection.topic || nextTopicSelection.totalPoolSize === 0) {
-        throw new ActionError(400, "No hay suficientes temas disponibles para esta configuración.");
-    }
-
-    if (nextTopicSelection.recycled) {
-        room.usedTopics = [];
-    }
-
-    room.usedTopics.push(nextTopicSelection.topic.id);
 
     let debA = room.players[0];
     let debB = room.players[1];
@@ -518,8 +584,10 @@ function startNextRound(room: Room) {
 
     room.rounds.push({
         number: room.currentRoundIndex + 2,
-        topicId: nextTopicSelection.topic.id,
-        topic: nextTopicSelection.topic,
+        topicId: "",
+        topic: null,
+        roundTopic: null,
+        selectedTopic: null,
         debatienteA_Id: debA.id,
         debatienteB_Id: debB.id,
         timeRemainingA: timeSecs,
@@ -532,11 +600,29 @@ function startNextRound(room: Room) {
         secondaryVotes: {},
         resolutionVotes: {},
         fallaciesSignaled: [],
-        winnerId: null
+        winnerId: null,
     });
 
     room.currentRoundIndex += 1;
-    room.state = "preparation";
+    room.state = "topic_selection";
+}
+
+function saveUserTopic(room: Room, text: string) {
+    const normalizedText = normalizeTopicText(text);
+    const existingTopic = room.savedTopics.find(topic => topic.text.toLowerCase() === normalizedText.toLowerCase());
+
+    if (existingTopic) {
+        existingTopic.lastUsedAt = Date.now();
+        return existingTopic;
+    }
+
+    const savedTopic = createSavedTopic(normalizedText, {
+        intensity: getTopicIntensityForGameIntensity(room.intensity),
+        lastUsedAt: Date.now(),
+    });
+
+    room.savedTopics.unshift(savedTopic);
+    return savedTopic;
 }
 
 function consumeSpeakingTime(round: Round) {
@@ -594,7 +680,7 @@ function moveToNextSpeaker(round: Round) {
 function resolveFallacyVote(room: Room, round: Round, vote: string) {
     const challenge = round.activeChallenge;
     if (!challenge) {
-        throw new ActionError(409, "No hay desafío de falacia activo");
+        throw new ActionError(409, "No hay desafio de falacia activo");
     }
 
     const shouldAccept = vote === "force_accept"
@@ -622,7 +708,7 @@ function resolveFallacyVote(room: Room, round: Round, vote: string) {
             accusedId: challenge.accusedId,
             fallacyId: challenge.fallacyId,
             roundNumber: round.number,
-            timestamp: Date.now()
+            timestamp: Date.now(),
         };
         round.fallaciesSignaled.push(signal);
     } else if (room.mode !== "mesa" && accuserIndex !== -1) {

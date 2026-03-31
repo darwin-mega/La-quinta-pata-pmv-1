@@ -1,12 +1,13 @@
 import { Redis } from "@upstash/redis";
 import { topics as systemTopics } from "@/data/topics";
 import { deriveLegacyGameIntensity, normalizeTopicConfigInput } from "@/lib/topic-engine";
-import { DebateTopic, RoomTopicConfig } from "@/lib/topic-types";
+import { DebateTopic, RoomTopicConfig, SavedTopic } from "@/lib/topic-types";
 
 export type GameIntensity = "liviano" | "medio" | "filoso";
 export type GameDuration = "corta" | "larga" | "leyenda";
 export type GameState =
     | "lobby"
+    | "topic_selection"
     | "preparation"
     | "debate"
     | "fallacy_review"
@@ -50,11 +51,14 @@ export type TurnPhase = {
 };
 
 export type DebateState = "transition" | "speaking" | "finished";
+export type RoundTopicMode = "random" | "custom" | "saved";
 
 export type Round = {
     number: number;
     topicId: string;
-    topic: DebateTopic;
+    topic: DebateTopic | null;
+    roundTopic: RoundTopicMode | null;
+    selectedTopic: string | null;
     debatienteA_Id: string;
     debatienteB_Id: string;
     timeRemainingA: number;
@@ -78,12 +82,14 @@ export type Room = {
     intensity: GameIntensity;
     duration: GameDuration;
     topicConfig: RoomTopicConfig;
+    playerCount?: number;
     state: GameState;
     hostId: string;
     players: Player[];
     rounds: Round[];
     currentRoundIndex: number;
     usedTopics: string[];
+    savedTopics: SavedTopic[];
     createdAt: number;
 };
 
@@ -108,21 +114,45 @@ const hydrateRoom = (room: Room): Room => {
     const normalizedTopicConfig = normalizeTopicConfigInput((room as Partial<Room>).topicConfig);
     const normalizedRounds = Array.isArray(room.rounds)
         ? room.rounds.map(round => {
-            const fallbackTopic = systemTopics.find(topic => topic.id === round.topicId) || buildFallbackTopic(round.topicId);
+            const roundTopicId = typeof round.topicId === "string" ? round.topicId : "";
+            const hasTopic = !!(round.topic || roundTopicId);
+            const fallbackTopic = roundTopicId
+                ? systemTopics.find(topic => topic.id === roundTopicId) || buildFallbackTopic(roundTopicId)
+                : null;
+
             return {
                 ...round,
-                topicId: round.topic?.id || round.topicId,
+                topicId: round.topic?.id || roundTopicId,
                 topic: round.topic || fallbackTopic,
+                roundTopic: round.roundTopic || (hasTopic ? "random" : null),
+                selectedTopic: typeof round.selectedTopic === "string"
+                    ? round.selectedTopic
+                    : (round.topic?.id || roundTopicId || null),
             };
         })
+        : [];
+    const normalizedSavedTopics = Array.isArray(room.savedTopics)
+        ? room.savedTopics
+            .filter(topic => topic && typeof topic === "object" && typeof topic.id === "string" && typeof topic.text === "string")
+            .map(topic => ({
+                ...topic,
+                text: topic.text.trim(),
+                createdAt: typeof topic.createdAt === "number" ? topic.createdAt : Date.now(),
+                source: topic.source || "user",
+            }))
+            .filter(topic => topic.text.length > 0)
         : [];
 
     return {
         ...room,
         topicConfig: normalizedTopicConfig,
         intensity: room.intensity || deriveLegacyGameIntensity(normalizedTopicConfig),
+        playerCount: room.mode === "mesa"
+            ? (typeof room.playerCount === "number" && room.playerCount > 0 ? room.playerCount : room.players.length)
+            : undefined,
         rounds: normalizedRounds,
         usedTopics: Array.isArray(room.usedTopics) ? room.usedTopics : [],
+        savedTopics: normalizedSavedTopics,
     };
 };
 

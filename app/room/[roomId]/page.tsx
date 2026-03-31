@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import styles from "./page.module.css";
 import LobbyView from "@/components/views/LobbyView";
+import RoundTopicSelectionView from "@/components/views/RoundTopicSelectionView";
 import PreparationView from "@/components/views/PreparationView";
 import DebateView from "@/components/views/DebateView";
 import VotingView from "@/components/views/VotingView";
@@ -200,6 +201,14 @@ export default function RoomPage() {
                         isHost={isHost} 
                         persistenceMode={persistenceMode}
                         onStart={() => dispatchAction("START_GAME")} 
+                    />
+                )}
+
+                {room.state === "topic_selection" && (
+                    <RoundTopicSelectionView
+                        room={room}
+                        isHost={isHost}
+                        onSelectTopic={(payload) => dispatchAction("SELECT_ROUND_TOPIC", payload)}
                     />
                 )}
 

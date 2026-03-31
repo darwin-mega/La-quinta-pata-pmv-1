@@ -1,3 +1,154 @@
+.wizardShell {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.backButton {
+    align-self: flex-start;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.backButton:hover {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.stepPanel {
+    padding: clamp(1.5rem, 4vw, 2.4rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.stepTitle {
+    margin: 0;
+    text-align: center;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.05;
+}
+
+.modeGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.modeCard {
+    min-height: 180px;
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.75rem;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modeCard:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 94, 58, 0.4);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
+}
+
+.modeTitle {
+    font-size: 1.55rem;
+    font-weight: 800;
+}
+
+.modeDescription {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.countGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.countButton {
+    padding: 1.35rem 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.countButton:hover {
+    transform: translateY(-2px);
+    border-color: rgba(59, 130, 246, 0.45);
+    background: rgba(59, 130, 246, 0.12);
+}
+
+.configBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.optionGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.groupLabel {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.optionGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+}
+
+.optionButton {
+    padding: 1rem 1.1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.optionButton:hover {
+    border-color: rgba(255, 94, 58, 0.35);
+}
+
+.optionButtonActive {
+    border-color: rgba(255, 94, 58, 0.45);
+    background: rgba(255, 94, 58, 0.14);
+    box-shadow: 0 12px 28px rgba(255, 94, 58, 0.16);
+}
+
 .header {
     margin-bottom: var(--spacing-6);
     text-align: center;
@@ -42,7 +193,6 @@
     font-size: 1rem;
     transition: border-color 0.2s;
     appearance: none;
-    /* remove default arrow down on select to style it properly if needed, but standard is fine for mvp */
 }
 
 .input:focus,
@@ -72,8 +222,7 @@
     padding: var(--spacing-4);
     border-radius: var(--radius-md);
     font-size: 1.1rem;
-    font-weight: 600;
-    margin-top: var(--spacing-2);
+    font-weight: 700;
     transition: opacity 0.2s;
 }
 
@@ -87,4 +236,18 @@
     color: var(--text-secondary);
     font-size: 0.95rem;
     padding: var(--spacing-2);
+}
+
+@media (max-width: 640px) {
+    .stepPanel {
+        padding: 1.25rem;
+    }
+
+    .countGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .modeCard {
+        min-height: 150px;
+    }
 }

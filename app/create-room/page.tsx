@@ -1,287 +1,224 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import styles from "./page.module.css";
-import TopicConfigSection from "@/components/TopicConfigSection";
-import {
-    DEFAULT_ROOM_TOPIC_CONFIG,
-    MAX_HOST_NAME_LENGTH,
-    MAX_PLAYER_NAME_LENGTH,
-    MAX_ROOM_NAME_LENGTH,
-} from "@/lib/topic-types";
-import { validateTopicConfig } from "@/lib/topic-engine";
+import { GameDuration, GameIntensity } from "@/lib/store";
+import { getGameDurationLabel, getGameIntensityLabel } from "@/lib/game";
+
+type PlayMode = "individual" | "mesa";
+type FlowStep = 1 | 2 | 3;
+
+const PLAYER_COUNT_OPTIONS = [3, 4, 5, 6, 7, 8];
+const INTENSITY_OPTIONS: GameIntensity[] = ["liviano", "medio", "filoso"];
+const DURATION_OPTIONS: GameDuration[] = ["corta", "larga", "leyenda"];
+
+const MODE_OPTIONS: Array<{
+    id: PlayMode;
+    title: string;
+    description: string;
+}> = [
+    {
+        id: "individual",
+        title: "Individual",
+        description: "Cada jugador usa su propio dispositivo",
+    },
+    {
+        id: "mesa",
+        title: "Mesa",
+        description: "Comparten dispositivos",
+    },
+];
 
 export default function CreateRoom() {
     const router = useRouter();
+    const [step, setStep] = useState<FlowStep>(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [playMode, setPlayMode] = useState<PlayMode | null>(null);
+    const [playerCount, setPlayerCount] = useState<number | undefined>(undefined);
+    const [intensity, setIntensity] = useState<GameIntensity>("medio");
+    const [duration, setDuration] = useState<GameDuration>("corta");
 
-    const [mode, setMode] = useState<"multiplayer" | "mesa">("multiplayer");
-    const [playerNames, setPlayerNames] = useState<string[]>(["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4"]);
-    const [topicConfig, setTopicConfig] = useState(DEFAULT_ROOM_TOPIC_CONFIG);
-
-    const [formData, setFormData] = useState({
-        name: "",
-        hostName: "",
-        duration: "corta"
-    });
-
-    const topicValidation = useMemo(() => validateTopicConfig(topicConfig), [topicConfig]);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handlePlayerNameChange = (index: number, value: string) => {
-        const newNames = [...playerNames];
-        newNames[index] = value;
-        setPlayerNames(newNames);
-    };
-
-    const addPlayer = () => {
-        if (playerNames.length < 10) {
-            setPlayerNames([...playerNames, `Jugador ${playerNames.length + 1}`]);
-        }
-    };
-
-    const removePlayer = (index: number) => {
-        if (playerNames.length > 4) {
-            const newNames = playerNames.filter((_, currentIndex) => currentIndex !== index);
-            setPlayerNames(newNames);
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
+    const handleModeSelect = (nextMode: PlayMode) => {
         setError("");
+        setPlayMode(nextMode);
 
-        if (!topicValidation.isValid) {
-            setError(topicValidation.errors[0]);
-            setLoading(false);
+        if (nextMode === "individual") {
+            setPlayerCount(undefined);
+            setStep(3);
             return;
         }
 
-        if (mode === "mesa") {
-            const emptyNames = playerNames.filter(name => !name.trim());
-            if (emptyNames.length > 0) {
-                setError("Todos los jugadores deben tener un nombre.");
-                setLoading(false);
-                return;
-            }
+        setPlayerCount(undefined);
+        setStep(2);
+    };
+
+    const handlePlayerCountSelect = (count: number) => {
+        setError("");
+        setPlayerCount(count);
+        setStep(3);
+    };
+
+    const handleBack = () => {
+        setError("");
+
+        if (step === 3) {
+            setStep(playMode === "mesa" ? 2 : 1);
+            return;
+        }
+
+        if (step === 2) {
+            setStep(1);
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!playMode) {
+            setError("Elegi como van a jugar.");
+            return;
+        }
+
+        if (playMode === "mesa" && !playerCount) {
+            setError("Elegi cuantos jugadores son.");
+            return;
         }
 
         try {
+            setLoading(true);
+            setError("");
+
             const payload = {
-                ...formData,
-                mode,
-                topicConfig,
-                playerNames: mode === "mesa" ? playerNames.map(name => name.trim()) : undefined
+                mode: playMode,
+                playerCount: playMode === "mesa" ? playerCount : undefined,
+                intensity,
+                duration,
             };
 
-            const res = await fetch("/api/room", {
+            const response = await fetch("/api/room", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
             });
 
-            const data = await res.json();
+            const data = await response.json();
 
-            if (!res.ok) {
+            if (!response.ok) {
                 throw new Error(data.error || "Error al crear la sala");
             }
 
             localStorage.setItem(`laJaula_playerId_${data.room.id}`, data.playerId);
             localStorage.setItem(`laJaula_isHost_${data.room.id}`, "true");
 
-            if (mode === "mesa") {
+            if (playMode === "mesa") {
                 router.push(`/mesa/${data.room.id}`);
-            } else {
-                router.push(`/room/${data.room.id}`);
+                return;
             }
+
+            router.push(`/room/${data.room.id}`);
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || "No se pudo crear la sala");
             setLoading(false);
         }
     };
 
     return (
         <main className="page-container">
-            <div className={styles.header}>
-                <h1 className="title-serif">Crear Nueva Sala</h1>
-                <p className={styles.subtitle}>Configura reglas, jugadores y contenido para el debate</p>
-            </div>
+            <div className={styles.wizardShell}>
+                {step > 1 && (
+                    <button type="button" onClick={handleBack} className={styles.backButton}>
+                        Atras
+                    </button>
+                )}
 
-            <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", maxWidth: "500px", width: "100%" }}>
-                <button
-                    type="button"
-                    onClick={() => setMode("multiplayer")}
-                    style={{
-                        flex: 1,
-                        padding: "1rem",
-                        borderRadius: "var(--radius-md)",
-                        border: `2px solid ${mode === "multiplayer" ? "var(--accent-color)" : "transparent"}`,
-                        background: mode === "multiplayer" ? "rgba(255, 94, 58, 0.1)" : "rgba(255,255,255,0.05)",
-                        color: mode === "multiplayer" ? "white" : "var(--text-secondary)",
-                        transition: "all 0.2s",
-                        textAlign: "left"
-                    }}
-                >
-                    <div style={{ fontWeight: "bold", marginBottom: "0.25rem", color: mode === "multiplayer" ? "var(--accent-color)" : "white" }}>
-                        Varios dispositivos
-                    </div>
-                    <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>
-                        Cada jugador entra desde su propio celular con QR o código.
-                    </div>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setMode("mesa")}
-                    style={{
-                        flex: 1,
-                        padding: "1rem",
-                        borderRadius: "var(--radius-md)",
-                        border: `2px solid ${mode === "mesa" ? "#3b82f6" : "transparent"}`,
-                        background: mode === "mesa" ? "rgba(59, 130, 246, 0.1)" : "rgba(255,255,255,0.05)",
-                        color: mode === "mesa" ? "white" : "var(--text-secondary)",
-                        transition: "all 0.2s",
-                        textAlign: "left"
-                    }}
-                >
-                    <div style={{ fontWeight: "bold", marginBottom: "0.25rem", color: mode === "mesa" ? "#3b82f6" : "white" }}>
-                        Modo mesa
-                    </div>
-                    <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>
-                        Ideal para jugar con un solo dispositivo en el centro de la mesa.
-                    </div>
-                </button>
-            </div>
-
-            <form className={`glass-panel ${styles.form}`} onSubmit={handleSubmit}>
                 {error && <div className={styles.errorMessage}>{error}</div>}
 
-                {mode === "multiplayer" && (
-                    <div className={styles.formGroup}>
-                        <label htmlFor="hostName">Tu apodo (Host)</label>
-                        <input
-                            id="hostName"
-                            type="text"
-                            name="hostName"
-                            required={mode === "multiplayer"}
-                            maxLength={MAX_HOST_NAME_LENGTH}
-                            placeholder="Ej: Sofía"
-                            value={formData.hostName}
-                            onChange={handleChange}
-                            className={styles.input}
-                        />
-                    </div>
-                )}
+                {step === 1 && (
+                    <section className={`glass-panel ${styles.stepPanel}`}>
+                        <h1 className={`title-serif ${styles.stepTitle}`}>Como van a jugar?</h1>
 
-                <div className={styles.formGroup}>
-                    <label htmlFor="name">Nombre de la sala</label>
-                    <input
-                        id="name"
-                        type="text"
-                        name="name"
-                        required
-                        maxLength={MAX_ROOM_NAME_LENGTH}
-                        placeholder="Ej: Debate con amigxs"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className={styles.input}
-                    />
-                </div>
-
-                <div className={styles.formGroup}>
-                    <label htmlFor="duration">Modo de Partida</label>
-                    <select id="duration" name="duration" value={formData.duration} onChange={handleChange} className={styles.select}>
-                        <option value="corta">☕ Modo Corto (1 debate por persona)</option>
-                        <option value="larga">⚔️ Modo Largo (3 debates por persona)</option>
-                        <option value="leyenda">🔥 Modo Leyenda (Todos contra todos)</option>
-                    </select>
-                </div>
-
-                <TopicConfigSection value={topicConfig} onChange={setTopicConfig} validation={topicValidation} />
-
-                {mode === "mesa" && (
-                    <div className={styles.formGroup} style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-                        <label>Jugadores Locales (Mínimo 4)</label>
-                        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "1rem" }}>
-                            Agrega los nombres de quienes van a jugar presencialmente en este dispositivo.
-                        </p>
-
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                            {playerNames.map((name, index) => (
-                                <div key={index} style={{ display: "flex", gap: "0.5rem" }}>
-                                    <input
-                                        type="text"
-                                        required={mode === "mesa"}
-                                        maxLength={MAX_PLAYER_NAME_LENGTH}
-                                        placeholder={`Jugador ${index + 1}`}
-                                        value={name}
-                                        onChange={(event) => handlePlayerNameChange(index, event.target.value)}
-                                        className={styles.input}
-                                        style={{ flex: 1 }}
-                                    />
-                                    {playerNames.length > 4 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => removePlayer(index)}
-                                            style={{
-                                                background: "rgba(239, 68, 68, 0.1)",
-                                                color: "#ef4444",
-                                                border: "1px solid rgba(239, 68, 68, 0.3)",
-                                                borderRadius: "var(--radius-sm)",
-                                                width: "40px",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                cursor: "pointer"
-                                            }}
-                                            title="Eliminar jugador"
-                                        >
-                                            ✕
-                                        </button>
-                                    )}
-                                </div>
+                        <div className={styles.modeGrid}>
+                            {MODE_OPTIONS.map(option => (
+                                <button
+                                    key={option.id}
+                                    type="button"
+                                    onClick={() => handleModeSelect(option.id)}
+                                    className={styles.modeCard}
+                                >
+                                    <span className={styles.modeTitle}>{option.title}</span>
+                                    <span className={styles.modeDescription}>{option.description}</span>
+                                </button>
                             ))}
                         </div>
-
-                        {playerNames.length < 10 && (
-                            <button
-                                type="button"
-                                onClick={addPlayer}
-                                style={{
-                                    marginTop: "0.75rem",
-                                    background: "transparent",
-                                    color: "var(--text-secondary)",
-                                    border: "1px dashed rgba(255,255,255,0.2)",
-                                    padding: "0.5rem",
-                                    borderRadius: "var(--radius-sm)",
-                                    cursor: "pointer",
-                                    width: "100%",
-                                    transition: "all 0.2s",
-                                    fontSize: "0.9rem"
-                                }}
-                                onMouseOver={(event) => { event.currentTarget.style.color = "white"; }}
-                                onMouseOut={(event) => { event.currentTarget.style.color = "var(--text-secondary)"; }}
-                            >
-                                + Agregar otro jugador
-                            </button>
-                        )}
-                    </div>
+                    </section>
                 )}
 
-                <button type="submit" disabled={loading} className={styles.primaryButton} style={{ marginTop: "1rem" }}>
-                    {loading ? "Creando..." : "Crear Sala"}
-                </button>
+                {step === 2 && (
+                    <section className={`glass-panel ${styles.stepPanel}`}>
+                        <h1 className={`title-serif ${styles.stepTitle}`}>Cuantos jugadores son?</h1>
 
-                <Link href="/" className={styles.cancelButton}>
-                    Cancelar
-                </Link>
-            </form>
+                        <div className={styles.countGrid}>
+                            {PLAYER_COUNT_OPTIONS.map(count => (
+                                <button
+                                    key={count}
+                                    type="button"
+                                    onClick={() => handlePlayerCountSelect(count)}
+                                    className={styles.countButton}
+                                >
+                                    {count}
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {step === 3 && (
+                    <section className={`glass-panel ${styles.stepPanel}`}>
+                        <div className={styles.configBlock}>
+                            <div className={styles.optionGroup}>
+                                <span className={styles.groupLabel}>Intensidad</span>
+                                <div className={styles.optionGrid}>
+                                    {INTENSITY_OPTIONS.map(option => (
+                                        <button
+                                            key={option}
+                                            type="button"
+                                            onClick={() => setIntensity(option)}
+                                            className={`${styles.optionButton} ${intensity === option ? styles.optionButtonActive : ""}`}
+                                        >
+                                            {getGameIntensityLabel(option)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className={styles.optionGroup}>
+                                <span className={styles.groupLabel}>Largo</span>
+                                <div className={styles.optionGrid}>
+                                    {DURATION_OPTIONS.map(option => (
+                                        <button
+                                            key={option}
+                                            type="button"
+                                            onClick={() => setDuration(option)}
+                                            className={`${styles.optionButton} ${duration === option ? styles.optionButtonActive : ""}`}
+                                        >
+                                            {getGameDurationLabel(option)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className={styles.primaryButton}
+                        >
+                            {loading ? "Creando..." : "Crear sala"}
+                        </button>
+                    </section>
+                )}
+            </div>
         </main>
     );
 }
