@@ -11,6 +11,10 @@ const BENEFITS = [
         title: "Te deja algo mas",
         description: "No es solo pasarla bien: te hace pensar mejor lo que dices y como lo sostienes.",
     },
+    {
+        title: "Para ir al hueso",
+        description: "Puedes jugar liviano o meterte en temas filosos cuando el grupo quiere mas intensidad.",
+    },
 ];
 
 export default function Home() {
@@ -92,8 +96,8 @@ export default function Home() {
                         </div>
 
                         <div className={styles.heroNote}>
-                            <div className={styles.noteTitle}>Al hueso</div>
-                            <p>Divertido de verdad. Te deja algo mas.</p>
+                            <div className={styles.noteTitle}>Sin friccion</div>
+                            <p>Crea sala, elegi modo, define intensidad y arranca en segundos.</p>
                         </div>
                     </div>
                 </div>
