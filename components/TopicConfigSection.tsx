@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import styles from "@/app/create-room/page.module.css";
 import {
+    MAX_CUSTOM_TOPICS,
+    MAX_CUSTOM_TOPIC_LENGTH,
     RoomTopicConfig,
     TOPIC_CATEGORY_OPTIONS,
     TOPIC_INTENSITY_OPTIONS,
@@ -78,6 +80,16 @@ export default function TopicConfigSection({ value, onChange, validation }: Topi
         const normalizedText = draft.text.trim().replace(/\s+/g, " ");
         if (!normalizedText) {
             setEditorError("Escribí un tema antes de agregarlo.");
+            return;
+        }
+
+        if (normalizedText.length > MAX_CUSTOM_TOPIC_LENGTH) {
+            setEditorError(`Cada tema puede tener hasta ${MAX_CUSTOM_TOPIC_LENGTH} caracteres.`);
+            return;
+        }
+
+        if (!editingId && value.customTopics.length >= MAX_CUSTOM_TOPICS) {
+            setEditorError(`PodÃ©s cargar hasta ${MAX_CUSTOM_TOPICS} temas en esta sala.`);
             return;
         }
 
@@ -298,9 +310,15 @@ export default function TopicConfigSection({ value, onChange, validation }: Topi
                             onChange={event => setDraft(current => ({ ...current, text: event.target.value }))}
                             placeholder="Ej: La universidad debería prohibir el uso de IA en evaluaciones."
                             className={styles.input}
+                            maxLength={MAX_CUSTOM_TOPIC_LENGTH}
                             rows={3}
                             style={{ minHeight: "110px", resize: "vertical" }}
                         />
+
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", color: "var(--text-secondary)", fontSize: "0.8rem" }}>
+                            <span>El orden de la lista define la prioridad de tus temas.</span>
+                            <span>{draft.text.trim().length}/{MAX_CUSTOM_TOPIC_LENGTH}</span>
+                        </div>
 
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "0.75rem" }}>
                             <select
@@ -359,7 +377,7 @@ export default function TopicConfigSection({ value, onChange, validation }: Topi
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
                             <span style={{ color: "white", fontWeight: 700 }}>Lista cargada</span>
                             <span style={{ color: "var(--text-secondary)", fontSize: "0.84rem" }}>
-                                {value.customTopics.length} tema(s)
+                                {value.customTopics.length}/{MAX_CUSTOM_TOPICS} tema(s)
                             </span>
                         </div>
 
@@ -417,8 +435,8 @@ export default function TopicConfigSection({ value, onChange, validation }: Topi
                 </div>
                 <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.88rem", lineHeight: 1.5 }}>
                     {value.mode === "system" && "La partida usa solo el catalogo del juego filtrado por esta configuracion. Los temas no se repiten hasta agotar el pool de la sesion."}
-                    {value.mode === "custom" && "La partida usa solo los temas cargados en esta sala. Los temas no se repiten hasta agotar el pool de la sesion."}
-                    {value.mode === "mixed" && "En modo mixto los dos pools se mezclan aleatoriamente. Los temas no se repiten hasta agotar el pool de la sesion."}
+                    {value.mode === "custom" && "La partida usa solo los temas cargados en esta sala y respeta el orden que armes. Los temas no se repiten hasta agotar el pool de la sesion."}
+                    {value.mode === "mixed" && "En modo mixto el sistema alterna temas del catalogo con tus temas propios para que ambos aparezcan de verdad en la sesion."}
                 </p>
                 {validation.errors.length > 0 && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>

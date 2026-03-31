@@ -3,6 +3,8 @@ import {
     CustomTopicInput,
     DEFAULT_ROOM_TOPIC_CONFIG,
     DebateTopic,
+    MAX_CUSTOM_TOPICS,
+    MAX_CUSTOM_TOPIC_LENGTH,
     MIN_CUSTOM_TOPICS,
     RoomTopicConfig,
     TOPIC_CATEGORY_OPTIONS,
@@ -28,6 +30,29 @@ const shuffle = <T,>(items: T[]) => {
         [copy[index], copy[randomIndex]] = [copy[randomIndex], copy[index]];
     }
     return copy;
+};
+
+const interleaveTopicPools = (systemPool: DebateTopic[], customPool: DebateTopic[]) => {
+    if (systemPool.length === 0) return [...customPool];
+    if (customPool.length === 0) return [...systemPool];
+
+    const mixedPool: DebateTopic[] = [];
+    const systemQueue = [...systemPool];
+    const customQueue = [...customPool];
+    let nextSource: "system" | "custom" = Math.random() < 0.5 ? "system" : "custom";
+
+    while (systemQueue.length > 0 || customQueue.length > 0) {
+        if (nextSource === "system") {
+            mixedPool.push(systemQueue.shift() || customQueue.shift()!);
+            nextSource = "custom";
+            continue;
+        }
+
+        mixedPool.push(customQueue.shift() || systemQueue.shift()!);
+        nextSource = "system";
+    }
+
+    return mixedPool;
 };
 
 const buildCustomDebateTopic = (topic: CustomTopicInput): DebateTopic => {
@@ -142,18 +167,18 @@ export const getCustomTopicCount = (config: RoomTopicConfig) => {
 
 export const buildTopicPool = (config: RoomTopicConfig): DebateTopic[] => {
     const normalizedConfig = normalizeTopicConfigInput(config);
-    const filteredSystemTopics = filterSystemTopics(normalizedConfig);
+    const filteredSystemTopics = shuffle(filterSystemTopics(normalizedConfig));
     const customTopics = normalizeCustomTopics(normalizedConfig.customTopics).map(buildCustomDebateTopic);
 
     if (normalizedConfig.mode === "system") {
-        return shuffle(filteredSystemTopics);
+        return filteredSystemTopics;
     }
 
     if (normalizedConfig.mode === "custom") {
-        return shuffle(customTopics);
+        return customTopics;
     }
 
-    return shuffle([...filteredSystemTopics, ...customTopics]);
+    return interleaveTopicPools(filteredSystemTopics, customTopics);
 };
 
 export const getNextTopicFromPool = (config: RoomTopicConfig, usedTopicIds: string[]) => {
@@ -179,6 +204,7 @@ export const validateTopicConfig = (input: unknown): TopicValidationResult => {
     const filteredSystemTopics = filterSystemTopics(config);
     const customTopics = normalizeCustomTopics(config.customTopics);
     const errors: string[] = [];
+    pushCustomTopicValidationErrors(errors, customTopics);
 
     if (hasDuplicateCustomTopics(config.customTopics)) {
         errors.push("Los temas personalizados no pueden repetirse exactamente.");
@@ -193,6 +219,13 @@ export const validateTopicConfig = (input: unknown): TopicValidationResult => {
     }
 
     if (config.mode === "mixed") {
+        if (filteredSystemTopics.length === 0) {
+            errors.push("En modo mixto tiene que quedar al menos un tema del sistema con los filtros elegidos.");
+        }
+
+        if (customTopics.length === 0) {
+            errors.push("En modo mixto cargá al menos un tema personalizado para que la mezcla sea real.");
+        }
         const totalCount = filteredSystemTopics.length + customTopics.length;
         if (totalCount < MIN_CUSTOM_TOPICS) {
             errors.push(`Necesitás al menos ${MIN_CUSTOM_TOPICS} temas combinados entre el sistema y los personalizados.`);
@@ -272,6 +305,16 @@ export const summarizeTopicConfig = (config: RoomTopicConfig) => {
         intensitiesLabel,
         ...validation,
     };
+};
+
+const pushCustomTopicValidationErrors = (errors: string[], customTopics: CustomTopicInput[]) => {
+    if (customTopics.some(topic => topic.text.length > MAX_CUSTOM_TOPIC_LENGTH)) {
+        errors.push(`Cada tema personalizado puede tener hasta ${MAX_CUSTOM_TOPIC_LENGTH} caracteres.`);
+    }
+
+    if (customTopics.length > MAX_CUSTOM_TOPICS) {
+        errors.push(`Podés cargar hasta ${MAX_CUSTOM_TOPICS} temas personalizados por sala.`);
+    }
 };
 
 const normalizeCustomTopicInput = (input: unknown, index: number): CustomTopicInput | null => {

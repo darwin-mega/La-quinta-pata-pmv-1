@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./page.module.css";
 import TopicConfigSection from "@/components/TopicConfigSection";
-import { DEFAULT_ROOM_TOPIC_CONFIG } from "@/lib/topic-types";
+import {
+    DEFAULT_ROOM_TOPIC_CONFIG,
+    MAX_HOST_NAME_LENGTH,
+    MAX_PLAYER_NAME_LENGTH,
+    MAX_ROOM_NAME_LENGTH,
+} from "@/lib/topic-types";
 import { validateTopicConfig } from "@/lib/topic-engine";
 
 export default function CreateRoom() {
@@ -165,7 +170,7 @@ export default function CreateRoom() {
                             type="text"
                             name="hostName"
                             required={mode === "multiplayer"}
-                            maxLength={15}
+                            maxLength={MAX_HOST_NAME_LENGTH}
                             placeholder="Ej: Sofía"
                             value={formData.hostName}
                             onChange={handleChange}
@@ -181,7 +186,7 @@ export default function CreateRoom() {
                         type="text"
                         name="name"
                         required
-                        maxLength={20}
+                        maxLength={MAX_ROOM_NAME_LENGTH}
                         placeholder="Ej: Debate con amigxs"
                         value={formData.name}
                         onChange={handleChange}
@@ -213,7 +218,7 @@ export default function CreateRoom() {
                                     <input
                                         type="text"
                                         required={mode === "mesa"}
-                                        maxLength={15}
+                                        maxLength={MAX_PLAYER_NAME_LENGTH}
                                         placeholder={`Jugador ${index + 1}`}
                                         value={name}
                                         onChange={(event) => handlePlayerNameChange(index, event.target.value)}

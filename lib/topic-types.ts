@@ -71,6 +71,11 @@ export type TopicValidationResult = {
 };
 
 export const MIN_CUSTOM_TOPICS = 5;
+export const MAX_CUSTOM_TOPICS = 40;
+export const MAX_CUSTOM_TOPIC_LENGTH = 180;
+export const MAX_ROOM_NAME_LENGTH = 20;
+export const MAX_HOST_NAME_LENGTH = 15;
+export const MAX_PLAYER_NAME_LENGTH = 15;
 
 export const DEFAULT_ROOM_TOPIC_CONFIG: RoomTopicConfig = {
     mode: "system",
