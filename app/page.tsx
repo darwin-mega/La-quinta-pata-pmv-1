@@ -83,7 +83,6 @@ export default function Home() {
 
                     <div className={styles.mediaColumn}>
                         <div className={styles.logoShell}>
-                            <div className={styles.logoBadge}>Logo en movimiento</div>
                             <video
                                 className={styles.logoVideo}
                                 src="/media/logo-mov.mp4"
@@ -117,14 +116,17 @@ export default function Home() {
                 </div>
 
                 <div className={styles.trailerFrame}>
-                    <video
-                        className={styles.trailerVideo}
-                        src="/media/trailer-la-quinta-pata.mp4"
-                        controls
-                        preload="metadata"
-                        playsInline
-                        poster="/media/fondo.png"
-                    />
+                    <div className={styles.trailerDevice}>
+                        <div className={styles.trailerTopBar} />
+                        <video
+                            className={styles.trailerVideo}
+                            src="/media/trailer-la-quinta-pata.mp4"
+                            controls
+                            preload="metadata"
+                            playsInline
+                            poster="/media/fondo.png"
+                        />
+                    </div>
                 </div>
             </section>
 
