@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "audio:generate": "node scripts/generate-audio.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.37.0",

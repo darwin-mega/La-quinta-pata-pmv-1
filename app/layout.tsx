@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import SoundIdentity from '@/components/SoundIdentity';
 import Watermark from '@/components/Watermark';
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({
         <html lang="es">
             <body>
                 <Watermark />
+                <SoundIdentity />
                 {children}
             </body>
         </html>

@@ -1,29 +1,36 @@
-import { useEffect, useState } from "react";
-import { playTickSound } from "@/lib/sounds";
+import { useEffect, useRef, useState } from "react";
+import { playTickSound, playTimeoutSound } from "@/lib/sounds";
 
 export default function Timer({ durationSec, onComplete, isPaused = false }: { durationSec: number, onComplete?: () => void, isPaused?: boolean }) {
     const [timeLeft, setTimeLeft] = useState(durationSec);
+    const hasCompletedRef = useRef(false);
 
     useEffect(() => {
         setTimeLeft(durationSec);
+        hasCompletedRef.current = false;
     }, [durationSec]);
 
     useEffect(() => {
         if (timeLeft <= 0) {
-            if (onComplete) onComplete();
+            if (!hasCompletedRef.current) {
+                hasCompletedRef.current = true;
+                playTimeoutSound();
+                onComplete?.();
+            }
             return;
         }
         if (isPaused) return;
 
         const int = setInterval(() => {
             setTimeLeft(prev => {
-                const n = prev - 1;
-                if (n <= 5 && n > 0) {
+                const nextValue = prev - 1;
+                if (nextValue <= 5 && nextValue > 0) {
                     playTickSound();
                 }
-                return n;
+                return nextValue;
             });
         }, 1000);
+
         return () => clearInterval(int);
     }, [timeLeft, onComplete, isPaused]);
 

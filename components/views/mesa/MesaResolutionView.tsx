@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Room } from "@/lib/store";
+import { playWinSound } from "@/lib/sounds";
 
 export default function MesaResolutionView({ room, onShowLeaderboard }: { room: Room, onShowLeaderboard: () => void }) {
     const round = room.rounds[room.currentRoundIndex];
@@ -24,6 +26,10 @@ export default function MesaResolutionView({ room, onShowLeaderboard }: { room: 
 
     const finalA = (rawA - falA > rawB - falB) ? 3 : (rawA - falA === rawB - falB ? 1 : 0);
     const finalB = (rawB - falB > rawA - falA) ? 3 : (rawB - falB === rawA - falA ? 1 : 0);
+
+    useEffect(() => {
+        playWinSound();
+    }, []);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', width: '100%', maxWidth: '900px', margin: '0 auto', animation: 'fadeIn 0.5s ease' }}>

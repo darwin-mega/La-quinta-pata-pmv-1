@@ -203,7 +203,10 @@ export default function DebateView({
                 {!isActiveSpeaker && isSpeakingState && !bothExhausted && canSignalFallacy && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                         <button
-                            onClick={() => setShowFallacies(true)}
+                            onClick={() => {
+                                playFallacySound();
+                                setShowFallacies(true);
+                            }}
                             style={{ 
                                 width: '100%', 
                                 padding: '1.3rem', 

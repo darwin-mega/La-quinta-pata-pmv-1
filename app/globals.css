@@ -58,6 +58,33 @@ body {
   min-height: 100vh;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.12), transparent 0 28%),
+    radial-gradient(circle at 85% 12%, rgba(255, 94, 58, 0.11), transparent 0 25%),
+    radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.08), transparent 0 30%);
+  animation: driftGlow 18s ease-in-out infinite;
+  opacity: 0.8;
+  z-index: 0;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -68,6 +95,34 @@ button {
   border: none;
   background: none;
   cursor: pointer;
+}
+
+button,
+a,
+.glass-panel {
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+button:hover:not(:disabled),
+a:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+button:active:not(:disabled),
+a:active {
+  transform: scale(0.985);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.85);
 }
 
 /* Base utility classes can be added here, though we'll mainly use CSS modules */
@@ -92,6 +147,7 @@ button {
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
 }
 
 /* Simple animations */
@@ -125,6 +181,19 @@ button {
   100% {
     transform: scale(1);
     box-shadow: 0 0 10px rgba(255, 94, 58, 0.4);
+  }
+}
+
+@keyframes driftGlow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.72;
+  }
+
+  50% {
+    transform: translate3d(0, -10px, 0) scale(1.03);
+    opacity: 1;
   }
 }
 

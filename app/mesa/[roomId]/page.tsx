@@ -72,6 +72,12 @@ export default function MesaPage() {
         };
     }, [fetchState]);
 
+    useEffect(() => {
+        if (room?.state && room.state !== 'lobby') {
+            import('@/lib/sounds').then(m => m.playPhaseChangeSound());
+        }
+    }, [room?.state]);
+
     const dispatchAction = async (action: string, payload: any = {}) => {
         let attempts = 0;
         const maxAttempts = 2;
