@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { Room } from "@/lib/store";
 import Logo from "@/components/Logo";
+import TopicSummaryCard from "@/components/TopicSummaryCard";
 import MesaPreparationView from "@/components/views/mesa/MesaPreparationView";
 import MesaDebateView from "@/components/views/mesa/MesaDebateView";
 import MesaFallacyReviewView from "@/components/views/mesa/MesaFallacyReviewView";
@@ -175,9 +176,13 @@ export default function MesaPage() {
 
                         <div className={styles.infoGrid}>
                             <div className={styles.infoCard}>
-                                <div className={styles.infoLabel}>Intensidad</div>
+                                <div className={styles.infoLabel}>Contenido</div>
                                 <div className={styles.infoValue}>
-                                    {room.intensity === 'liviano' ? '🟢 Liviana' : room.intensity === 'medio' ? '🟡 Media' : '🔴 Filosa'}
+                                    {room.topicConfig.mode === 'system'
+                                        ? 'Sistema'
+                                        : room.topicConfig.mode === 'custom'
+                                            ? 'Personalizado'
+                                            : 'Mixto'}
                                 </div>
                             </div>
                             <div className={styles.infoCard}>
@@ -192,6 +197,10 @@ export default function MesaPage() {
                                     Esperando inicio
                                 </div>
                             </div>
+                        </div>
+
+                        <div style={{ width: '100%', maxWidth: '980px' }}>
+                            <TopicSummaryCard room={room} accentColor="#3b82f6" title="Contenido de la mesa" />
                         </div>
 
                         <div className={`glass-panel`} style={{ padding: '2rem' }}>

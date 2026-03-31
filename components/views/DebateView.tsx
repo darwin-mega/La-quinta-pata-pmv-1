@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Room } from "@/lib/store";
 import Timer from "../Timer";
 import FallacyPanel from "../FallacyPanel";
-import { topics } from "@/data/topics";
 import { playTurnSound, playFallacySound } from "@/lib/sounds";
 import { Info, AlertTriangle, MessageSquare } from "lucide-react";
 
@@ -15,7 +14,7 @@ export default function DebateView({
 }) {
     const [showFallacies, setShowFallacies] = useState(false);
     const round = room.rounds[room.currentRoundIndex];
-    const topic = topics.find(t => t.id === round.topicId);
+    const topic = round.topic;
 
     // Derived states
     const isSpeakingState = round.debateState === "speaking";

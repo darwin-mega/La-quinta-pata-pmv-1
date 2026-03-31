@@ -7,9 +7,9 @@ import {
     mutateRoom,
     syncTimers,
 } from "@/lib/store";
-import { topics } from "@/data/topics";
 import { hasGameEnded, isTwoPlayerRoom } from "@/lib/game";
 import { readRoomSession, RoomSession } from "@/lib/session";
+import { getNextTopicFromPool } from "@/lib/topic-engine";
 
 class ActionError extends Error {
     status: number;
@@ -465,21 +465,16 @@ function startNextRound(room: Room) {
         throw new ActionError(400, "Se necesitan al menos 2 jugadores");
     }
 
-    let availableTopics = topics.filter(topic =>
-        topic.intensity === room.intensity && !room.usedTopics.includes(topic.id)
-    );
+    const nextTopicSelection = getNextTopicFromPool(room.topicConfig, room.usedTopics);
+    if (!nextTopicSelection.topic || nextTopicSelection.totalPoolSize === 0) {
+        throw new ActionError(400, "No hay suficientes temas disponibles para esta configuración.");
+    }
 
-    if (availableTopics.length === 0) {
-        availableTopics = topics.filter(topic => topic.intensity === room.intensity);
+    if (nextTopicSelection.recycled) {
         room.usedTopics = [];
     }
 
-    const randomTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
-    if (!randomTopic) {
-        throw new ActionError(500, "No hay temas disponibles para esta intensidad");
-    }
-
-    room.usedTopics.push(randomTopic.id);
+    room.usedTopics.push(nextTopicSelection.topic.id);
 
     let debA = room.players[0];
     let debB = room.players[1];
@@ -523,7 +518,8 @@ function startNextRound(room: Room) {
 
     room.rounds.push({
         number: room.currentRoundIndex + 2,
-        topicId: randomTopic.id,
+        topicId: nextTopicSelection.topic.id,
+        topic: nextTopicSelection.topic,
         debatienteA_Id: debA.id,
         debatienteB_Id: debB.id,
         timeRemainingA: timeSecs,

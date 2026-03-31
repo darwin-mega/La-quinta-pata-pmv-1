@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { GameDuration, GameIntensity, createRoom, generatePlayerId, Room } from "@/lib/store";
+import { GameDuration, createRoom, generatePlayerId, Room } from "@/lib/store";
 import { setRoomSessionCookie } from "@/lib/session";
+import { deriveLegacyGameIntensity, normalizeTopicConfigInput, validateTopicConfig } from "@/lib/topic-engine";
 
-const VALID_INTENSITIES = new Set(["liviano", "medio", "filoso"]);
 const VALID_DURATIONS = new Set(["corta", "larga", "leyenda"]);
 const VALID_MODES = new Set(["multiplayer", "mesa"]);
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { name, intensity, duration, hostName, mode = "multiplayer", playerNames = [] } = body;
+        const { name, duration, hostName, mode = "multiplayer", playerNames = [], topicConfig } = body;
 
         const normalizedMode = typeof mode === "string" ? mode : "multiplayer";
         const normalizedRoomName = typeof name === "string" ? name.trim() : "";
@@ -19,37 +19,42 @@ export async function POST(req: Request) {
                 .map((playerName: unknown) => typeof playerName === "string" ? playerName.trim() : "")
                 .filter(Boolean)
             : [];
+        const normalizedTopicConfig = normalizeTopicConfigInput(topicConfig);
+        const topicValidation = validateTopicConfig(normalizedTopicConfig);
 
-        if (!normalizedRoomName || !intensity || !duration) {
-            return NextResponse.json({ error: "Faltan datos requeridos" }, { status: 400 });
+        if (!normalizedRoomName || !duration) {
+            return NextResponse.json({ error: "Faltan datos requeridos para crear la sala." }, { status: 400 });
         }
 
-        if (!VALID_INTENSITIES.has(intensity) || !VALID_DURATIONS.has(duration) || !VALID_MODES.has(normalizedMode)) {
-            return NextResponse.json({ error: "Configuración inválida" }, { status: 400 });
+        if (!VALID_DURATIONS.has(duration) || !VALID_MODES.has(normalizedMode)) {
+            return NextResponse.json({ error: "La configuración general de la sala no es válida." }, { status: 400 });
+        }
+
+        if (!topicValidation.isValid) {
+            return NextResponse.json({ error: topicValidation.errors[0] }, { status: 400 });
         }
 
         if (normalizedMode === "multiplayer" && !normalizedHostName) {
-            return NextResponse.json({ error: "Falta el nombre del host" }, { status: 400 });
+            return NextResponse.json({ error: "Falta el nombre del host." }, { status: 400 });
         }
 
         if (normalizedMode === "mesa" && normalizedPlayerNames.length < 4) {
-            return NextResponse.json({ error: "Se necesitan al menos 4 jugadores para el modo mesa" }, { status: 400 });
+            return NextResponse.json({ error: "Se necesitan al menos 4 jugadores para el modo mesa." }, { status: 400 });
         }
 
         if (normalizedMode === "mesa") {
             const uniqueNames = new Set(normalizedPlayerNames.map(playerName => playerName.toLowerCase()));
             if (uniqueNames.size !== normalizedPlayerNames.length) {
-                return NextResponse.json({ error: "No puede haber nombres repetidos en la mesa" }, { status: 400 });
+                return NextResponse.json({ error: "No puede haber nombres repetidos en la mesa." }, { status: 400 });
             }
         }
 
         const validatedMode = normalizedMode as Room["mode"];
-        const validatedIntensity = intensity as GameIntensity;
         const validatedDuration = duration as GameDuration;
         const hostId = generatePlayerId();
 
-        const initialPlayers = normalizedMode === "mesa"
-            ? normalizedPlayerNames.map((playerName: string) => ({
+        const initialPlayers = validatedMode === "mesa"
+            ? normalizedPlayerNames.map(playerName => ({
                 id: generatePlayerId(),
                 name: playerName,
                 role: "jurado" as const,
@@ -69,8 +74,9 @@ export async function POST(req: Request) {
         const newRoomData: Omit<Room, "id" | "createdAt"> = {
             mode: validatedMode,
             name: normalizedRoomName,
-            intensity: validatedIntensity,
+            intensity: deriveLegacyGameIntensity(normalizedTopicConfig),
             duration: validatedDuration,
+            topicConfig: normalizedTopicConfig,
             state: "lobby",
             hostId,
             players: initialPlayers,
@@ -84,6 +90,6 @@ export async function POST(req: Request) {
         setRoomSessionCookie(response, room.id, hostId, true);
         return response;
     } catch {
-        return NextResponse.json({ error: "Error al crear la sala" }, { status: 500 });
+        return NextResponse.json({ error: "Error al crear la sala." }, { status: 500 });
     }
 }

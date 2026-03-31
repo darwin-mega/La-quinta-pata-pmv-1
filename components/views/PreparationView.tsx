@@ -1,10 +1,9 @@
 import { Room } from "@/lib/store";
-import { topics } from "@/data/topics";
 import Timer from "../Timer";
 
 export default function PreparationView({ room, myRole, onStartDebate, isHost }: { room: Room, myRole: string, onStartDebate: () => void, isHost: boolean }) {
     const round = room.rounds[room.currentRoundIndex];
-    const topic = topics.find(t => t.id === round.topicId);
+    const topic = round.topic;
     const prepTime = room.duration === "corta" ? 60 : 120; // 1 or 2 minutes
 
     if (!topic) return <div>Cargando tema...</div>;

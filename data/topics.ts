@@ -1,8 +1,10 @@
-export type TopicIntensity = "liviano" | "medio" | "filoso";
+import { DebateTopic, TOPIC_CATEGORY_OPTIONS, TopicCategoryId, TopicIntensity } from "@/lib/topic-types";
 
-export type Topic = {
+export type LegacyTopicIntensity = "liviano" | "medio" | "filoso";
+
+type RawTopic = {
     id: string;
-    intensity: TopicIntensity;
+    intensity: LegacyTopicIntensity;
     category: string;
     statement: string;
     context: string;
@@ -11,7 +13,74 @@ export type Topic = {
     prompts: string[];
 };
 
-export const topics: Topic[] = [
+const CATEGORY_LABELS = new Map(
+    TOPIC_CATEGORY_OPTIONS.map(category => [category.id, category.label])
+);
+
+const CATEGORY_ALIASES: Record<string, TopicCategoryId> = {
+    "Tecnología": "tecnologia",
+    "Hábitos": "sociedad",
+    "Cultura": "cultura_pop",
+    "Sociedad": "sociedad",
+    "Comunicación": "sociedad",
+    "Costumbres": "sociedad",
+    "Salud Mental": "sociedad",
+    "Educación": "educacion",
+    "Filosofía": "filosofia",
+    "Política": "politica",
+    "Economía": "actualidad",
+    "Psicología": "sociedad",
+    "Ética": "etica",
+    "Justicia": "etica",
+    "Filosofía Laboral": "trabajo",
+    "Comportamiento Humano": "sociedad",
+    "Filosofía General": "filosofia",
+    "Religión": "filosofia",
+    "Derechos": "etica",
+    "Salud Pública": "etica",
+    "Geopolítica": "politica",
+    "Poder": "politica",
+    "Verdad": "filosofia",
+    "Moral": "etica",
+    "Gobernanza": "politica",
+    "Libre Albedrío": "filosofia",
+    "Genética": "ciencia",
+    "Determinismo": "filosofia",
+    "Derecho Criminológico": "etica",
+    "Política Integral": "politica",
+    "Igualdad": "sociedad",
+    "Ética y Manipulación": "etica",
+    "Límites Asépticos": "actualidad",
+    "Comportamiento": "sociedad",
+};
+
+const normalizeCategory = (rawCategory: string) => CATEGORY_ALIASES[rawCategory] || "sociedad";
+
+const normalizeIntensity = (topicId: string, legacyIntensity: LegacyTopicIntensity): TopicIntensity => {
+    if (legacyIntensity === "liviano") return "baja";
+    if (legacyIntensity === "medio") return "media";
+    return parseInt(topicId.slice(1), 10) > 10 ? "muy_alta" : "alta";
+};
+
+const toDebateTopic = (rawTopic: RawTopic): DebateTopic => {
+    const category = normalizeCategory(rawTopic.category);
+    return {
+        id: rawTopic.id,
+        text: rawTopic.statement,
+        statement: rawTopic.statement,
+        category,
+        categoryLabel: CATEGORY_LABELS.get(category) || rawTopic.category,
+        intensity: normalizeIntensity(rawTopic.id, rawTopic.intensity),
+        source: "system",
+        context: rawTopic.context,
+        angleA: rawTopic.angleA,
+        angleB: rawTopic.angleB,
+        prompts: rawTopic.prompts,
+        enabled: true,
+    };
+};
+
+const rawTopics: RawTopic[] = [
     // --- LIVIANOS ---
     {
         id: "l1", intensity: "liviano", category: "Tecnología",
@@ -404,6 +473,8 @@ export const topics: Topic[] = [
     }
 ];
 
-export const getTopics = (): Topic[] => {
+export const topics: DebateTopic[] = rawTopics.map(toDebateTopic);
+
+export const getTopics = (): DebateTopic[] => {
     return topics;
 };

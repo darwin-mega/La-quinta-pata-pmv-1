@@ -3,6 +3,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { Copy, Check, Info, Users, ShieldAlert, Award } from "lucide-react";
 import { Room } from "@/lib/store";
 import Logo from "@/components/Logo";
+import TopicSummaryCard from "@/components/TopicSummaryCard";
 
 const MOTIVATIONAL_PHRASES = [
     "Detectar falacias ayuda a que no te engañen.",
@@ -90,6 +91,10 @@ export default function LobbyView({ room, isHost, onStart, persistenceMode = 're
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.1em' }}>SALA</span>
                     <span className="title-serif" style={{ fontSize: '2.2rem', fontWeight: 800, letterSpacing: '2px', color: 'var(--accent-color)' }}>{room.id}</span>
                 </div>
+            </div>
+
+            <div style={{ width: '100%', maxWidth: '350px' }}>
+                <TopicSummaryCard room={room} />
             </div>
 
             {/* Selector de Onboarding */}

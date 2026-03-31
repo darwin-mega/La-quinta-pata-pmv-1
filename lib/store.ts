@@ -1,4 +1,7 @@
 import { Redis } from "@upstash/redis";
+import { topics as systemTopics } from "@/data/topics";
+import { deriveLegacyGameIntensity, normalizeTopicConfigInput } from "@/lib/topic-engine";
+import { DebateTopic, RoomTopicConfig } from "@/lib/topic-types";
 
 export type GameIntensity = "liviano" | "medio" | "filoso";
 export type GameDuration = "corta" | "larga" | "leyenda";
@@ -51,6 +54,7 @@ export type DebateState = "transition" | "speaking" | "finished";
 export type Round = {
     number: number;
     topicId: string;
+    topic: DebateTopic;
     debatienteA_Id: string;
     debatienteB_Id: string;
     timeRemainingA: number;
@@ -73,6 +77,7 @@ export type Room = {
     name: string;
     intensity: GameIntensity;
     duration: GameDuration;
+    topicConfig: RoomTopicConfig;
     state: GameState;
     hostId: string;
     players: Player[];
@@ -83,6 +88,43 @@ export type Room = {
 };
 
 type MaybePromise<T> = T | Promise<T>;
+
+const buildFallbackTopic = (topicId: string): DebateTopic => ({
+    id: topicId,
+    text: "Tema no disponible",
+    statement: "Tema no disponible",
+    category: "sociedad",
+    categoryLabel: "Sociedad",
+    intensity: "media",
+    source: "system",
+    context: "Este tema proviene de una ronda anterior y no pudo reconstruirse desde el catálogo actual.",
+    angleA: "Defiende la tesis principal con la mejor reconstrucción posible.",
+    angleB: "Cuestiona la tesis principal con la mejor reconstrucción posible.",
+    prompts: [],
+    enabled: true,
+});
+
+const hydrateRoom = (room: Room): Room => {
+    const normalizedTopicConfig = normalizeTopicConfigInput((room as Partial<Room>).topicConfig);
+    const normalizedRounds = Array.isArray(room.rounds)
+        ? room.rounds.map(round => {
+            const fallbackTopic = systemTopics.find(topic => topic.id === round.topicId) || buildFallbackTopic(round.topicId);
+            return {
+                ...round,
+                topicId: round.topic?.id || round.topicId,
+                topic: round.topic || fallbackTopic,
+            };
+        })
+        : [];
+
+    return {
+        ...room,
+        topicConfig: normalizedTopicConfig,
+        intensity: room.intensity || deriveLegacyGameIntensity(normalizedTopicConfig),
+        rounds: normalizedRounds,
+        usedTopics: Array.isArray(room.usedTopics) ? room.usedTopics : [],
+    };
+};
 
 const KV_REST_API_URL =
     process.env.KV_REST_API_URL ||
@@ -174,17 +216,18 @@ export const getRoom = async (id: string): Promise<Room | undefined> => {
         try {
             const data = await redis.get<Room>(ROOM_KEY(key));
             if (data) {
-                globalStore.rooms[key] = data;
-                return data;
+                const normalizedRoom = hydrateRoom(data);
+                globalStore.rooms[key] = normalizedRoom;
+                return normalizedRoom;
             }
             return undefined;
         } catch (err) {
             console.error("[Redis] getRoom error, using memory fallback:", err);
-            return globalStore.rooms[key];
+            return globalStore.rooms[key] ? hydrateRoom(globalStore.rooms[key]) : undefined;
         }
     }
 
-    return globalStore.rooms[key];
+    return globalStore.rooms[key] ? hydrateRoom(globalStore.rooms[key]) : undefined;
 };
 
 export const getRooms = async (): Promise<Record<string, Room>> => {
@@ -192,7 +235,7 @@ export const getRooms = async (): Promise<Record<string, Room>> => {
 };
 
 export const saveRoom = async (room: Room): Promise<void> => {
-    const normalizedRoom = { ...room, id: room.id.toUpperCase() };
+    const normalizedRoom = hydrateRoom({ ...room, id: room.id.toUpperCase() });
 
     globalStore.rooms[normalizedRoom.id] = normalizedRoom;
 

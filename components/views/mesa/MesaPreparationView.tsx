@@ -1,11 +1,10 @@
 import { Room } from "@/lib/store";
-import { topics } from "@/data/topics";
 
 export default function MesaPreparationView({ room, onStartDebate }: { room: Room, onStartDebate: () => void }) {
     const round = room.rounds[room.currentRoundIndex];
     if (!round) return null;
 
-    const topic = topics.find(t => t.id === round.topicId);
+    const topic = round.topic;
     const pA = room.players.find(p => p.id === round.debatienteA_Id);
     const pB = room.players.find(p => p.id === round.debatienteB_Id);
 

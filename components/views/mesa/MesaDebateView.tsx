@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Room } from "@/lib/store";
 import Timer from "../../Timer";
 import FallacyPanel from "../../FallacyPanel";
-import { topics } from "@/data/topics";
 import { playTurnSound, playFallacySound } from "@/lib/sounds";
 
 export default function MesaDebateView({
@@ -18,7 +17,7 @@ export default function MesaDebateView({
     const round = room.rounds[room.currentRoundIndex];
     if (!round) return null;
 
-    const topic = topics.find(t => t.id === round.topicId);
+    const topic = round.topic;
     const pA = room.players.find(p => p.id === round.debatienteA_Id);
     const pB = room.players.find(p => p.id === round.debatienteB_Id);
 
