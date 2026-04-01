@@ -1,0 +1,415 @@
+.shell {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    animation: fadeIn 0.5s ease;
+}
+
+.shellNarrow {
+    max-width: 800px;
+    padding: 1rem;
+}
+
+.centerHeader {
+    text-align: center;
+}
+
+.eyebrow {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.statement {
+    margin-top: 0.5rem;
+    font-size: clamp(2rem, 5vw, 2.5rem);
+    line-height: 1.2;
+    color: white;
+    text-wrap: balance;
+}
+
+.cardsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.debaterCard {
+    min-width: 0;
+    padding: 2rem;
+    text-align: center;
+}
+
+.debaterTitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.debaterName {
+    font-size: clamp(2rem, 5vw, 2.5rem);
+    font-weight: 900;
+    color: white;
+    margin-bottom: 1rem;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+
+.debaterAngle {
+    font-size: 1.05rem;
+    font-style: italic;
+    line-height: 1.45;
+}
+
+.primaryAction {
+    margin-top: 1rem;
+    padding: 1.4rem;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    font-weight: 900;
+    box-shadow: 0 10px 30px rgba(255, 94, 58, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.topicStrip {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.topicStripTitle {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--accent-color);
+    text-transform: uppercase;
+}
+
+.topicStripText {
+    margin: 0.25rem 0 0;
+    color: white;
+    font-size: clamp(1.05rem, 3vw, 1.2rem);
+    line-height: 1.35;
+    text-wrap: balance;
+}
+
+.statusBanner {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.statusTitle {
+    margin: 0;
+    font-size: clamp(1.9rem, 7vw, 2.5rem);
+    text-transform: uppercase;
+    line-height: 1;
+    font-weight: 900;
+    text-wrap: balance;
+}
+
+.statusText {
+    margin: 0.5rem 0 0;
+    font-weight: 800;
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    text-wrap: balance;
+}
+
+.secondaryAction {
+    margin-top: 1rem;
+    padding: 1rem 1.2rem;
+    background: black;
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: clamp(1rem, 3vw, 1.15rem);
+}
+
+.timersGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 2rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.timerColumn {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    transition: all 0.3s;
+}
+
+.timerName {
+    font-size: clamp(1.35rem, 4vw, 1.8rem);
+    font-weight: 900;
+    line-height: 1.1;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.timerRole {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 700;
+    text-align: center;
+}
+
+.timerScale {
+    transform: scale(1.35);
+    margin: 0.75rem 0;
+}
+
+.vs {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    font-weight: 900;
+    opacity: 0.3;
+}
+
+.actionsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.actionButton {
+    min-width: 0;
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.2;
+    text-wrap: balance;
+}
+
+.fullWidth {
+    grid-column: 1 / -1;
+}
+
+.finishedCard {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--text-secondary);
+}
+
+.finishedTitle {
+    margin: 0 0 1rem;
+    color: white;
+    font-size: clamp(2rem, 6vw, 2.5rem);
+    text-transform: uppercase;
+    text-wrap: balance;
+}
+
+.finishedText {
+    margin: 0 0 2rem;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.finishedPrimary {
+    padding: 1.2rem 2rem;
+    background-color: var(--accent-color);
+    color: white;
+    border-radius: var(--radius-md);
+    font-size: clamp(1.25rem, 4vw, 1.8rem);
+    font-weight: 900;
+    border: none;
+    box-shadow: 0 10px 30px rgba(255, 94, 58, 0.4);
+}
+
+.scoreCard {
+    min-width: 0;
+    padding: 2rem;
+    text-align: center;
+}
+
+.scoreRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.bonusLabel {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.bonusValue {
+    font-size: clamp(3rem, 10vw, 4rem);
+    font-weight: 900;
+}
+
+.winner {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.winnerTitle {
+    font-size: clamp(2rem, 6vw, 2.5rem);
+    color: var(--warning-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    text-wrap: balance;
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(10, 10, 12, 0.98);
+    backdrop-filter: blur(15px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.overlayTitle {
+    font-size: clamp(2rem, 8vw, 3rem);
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-wrap: balance;
+}
+
+.overlayText {
+    font-size: clamp(1rem, 4vw, 1.35rem);
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.overlayGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    width: 100%;
+    max-width: 800px;
+}
+
+.overlayButton {
+    padding: 1.4rem 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: var(--radius-md);
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.overlayCancel {
+    margin-top: 2rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+    .shell {
+        gap: 1.5rem;
+    }
+
+    .shellNarrow {
+        padding: 0;
+    }
+
+    .cardsGrid,
+    .actionsGrid,
+    .timersGrid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .vs {
+        display: none;
+    }
+
+    .debaterCard,
+    .scoreCard,
+    .finishedCard {
+        padding: 1.2rem;
+    }
+
+    .timerScale {
+        transform: scale(1.1);
+        margin: 0.25rem 0;
+    }
+
+    .statusBanner {
+        padding: 1rem;
+    }
+
+    .primaryAction,
+    .actionButton,
+    .finishedPrimary {
+        width: 100%;
+    }
+
+    .scoreRow {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .statement {
+        font-size: clamp(1.8rem, 10vw, 2.2rem);
+    }
+
+    .debaterTitle,
+    .bonusLabel {
+        font-size: 0.95rem;
+    }
+
+    .debaterAngle,
+    .overlayText,
+    .finishedText {
+        font-size: 0.98rem;
+    }
+
+    .overlay {
+        padding: 1.2rem 0.85rem;
+    }
+
+    .overlayGrid {
+        grid-template-columns: 1fr;
+    }
+}
