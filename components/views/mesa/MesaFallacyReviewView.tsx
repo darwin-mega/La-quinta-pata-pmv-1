@@ -68,13 +68,13 @@ export default function MesaFallacyReviewView({
 
                 <div style={{ background: 'rgba(255,255,255,0.04)', padding: '1.25rem', borderRadius: 'var(--radius-md)' }}>
                     <h3 style={{ fontSize: '0.9rem', color: 'var(--warning-color)', marginBottom: '0.75rem', textTransform: 'uppercase', fontWeight: 800 }}>Definición</h3>
-                    <p style={{ color: 'white', fontSize: '1.15rem', lineHeight: 1.6, margin: 0 }}>"{fallacyDef?.definition}"</p>
+                    <p style={{ color: 'white', fontSize: '1.15rem', lineHeight: 1.6, margin: 0 }}>&quot;{fallacyDef?.definition}&quot;</p>
                 </div>
 
                 {fallacyDef?.example && (
                     <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px dashed rgba(255,255,255,0.1)' }}>
                         <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', textTransform: 'uppercase', fontWeight: 800 }}>Ejemplo</h3>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontStyle: 'italic', lineHeight: 1.5, margin: 0 }}>"{fallacyDef.example}"</p>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontStyle: 'italic', lineHeight: 1.5, margin: 0 }}>&quot;{fallacyDef.example}&quot;</p>
                     </div>
                 )}
             </div>

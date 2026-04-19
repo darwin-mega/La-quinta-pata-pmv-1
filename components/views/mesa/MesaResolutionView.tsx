@@ -5,6 +5,11 @@ import styles from "./MesaRoundLayout.module.css";
 
 export default function MesaResolutionView({ room, onShowLeaderboard }: { room: Room, onShowLeaderboard: () => void }) {
     const round = room.rounds[room.currentRoundIndex];
+
+    useEffect(() => {
+        playWinSound();
+    }, []);
+
     if (!round) return null;
 
     const topic = round.topic;
@@ -29,10 +34,6 @@ export default function MesaResolutionView({ room, onShowLeaderboard }: { room: 
     const finalA = rawA - falA > rawB - falB ? 3 : rawA - falA === rawB - falB ? 1 : 0;
     const finalB = rawB - falB > rawA - falA ? 3 : rawB - falB === rawA - falA ? 1 : 0;
 
-    useEffect(() => {
-        playWinSound();
-    }, []);
-
     const borderA = finalA > finalB ? "6px solid var(--success-color)" : finalA === finalB && finalA > 0 ? "6px solid var(--warning-color)" : "6px solid var(--border-color)";
     const borderB = finalB > finalA ? "6px solid var(--success-color)" : finalA === finalB && finalB > 0 ? "6px solid var(--warning-color)" : "6px solid var(--border-color)";
 
@@ -40,7 +41,7 @@ export default function MesaResolutionView({ room, onShowLeaderboard }: { room: 
         <div className={styles.shell}>
             <div className={styles.centerHeader}>
                 <span className={styles.eyebrow}>Resultado de ronda</span>
-                <h1 className={styles.statement}>"{topic?.statement}"</h1>
+                <h1 className={styles.statement}>&quot;{topic?.statement}&quot;</h1>
             </div>
 
             <div className={styles.cardsGrid}>

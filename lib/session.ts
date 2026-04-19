@@ -10,17 +10,27 @@ export type RoomSession = {
 };
 
 const COOKIE_MAX_AGE_SEC = 60 * 60 * 4;
-const SESSION_SECRET = (
+const configuredSessionSecret = (
     process.env.LA_JAULA_SESSION_SECRET ||
     process.env.NEXTAUTH_SECRET ||
     process.env.KV_REST_API_TOKEN ||
-    process.env.UPSTASH_REDIS_REST_TOKEN ||
-    "la-jaula-dev-secret"
+    process.env.UPSTASH_REDIS_REST_TOKEN
 );
+const DEV_SESSION_SECRET = "la-jaula-dev-secret";
+
+const getSessionSecret = () => {
+    if (configuredSessionSecret) return configuredSessionSecret;
+
+    if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
+        throw new Error("Falta LA_JAULA_SESSION_SECRET para firmar sesiones en produccion.");
+    }
+
+    return DEV_SESSION_SECRET;
+};
 
 const toBase64Url = (value: string) => Buffer.from(value, "utf8").toString("base64url");
 const fromBase64Url = (value: string) => Buffer.from(value, "base64url").toString("utf8");
-const sign = (value: string) => createHmac("sha256", SESSION_SECRET).update(value).digest("base64url");
+const sign = (value: string) => createHmac("sha256", getSessionSecret()).update(value).digest("base64url");
 
 export const getRoomSessionCookieName = (roomId: string) => `lq_session_${roomId.toUpperCase()}`;
 

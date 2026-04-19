@@ -14,7 +14,7 @@ import {
     createDebateTopicFromSavedTopic,
     createSavedTopic,
     createUserDebateTopic,
-    getRandomTopicByGameIntensity,
+    getNextTopicFromPool,
     getTopicIntensityForGameIntensity,
     normalizeTopicText,
 } from "@/lib/topic-engine";
@@ -121,20 +121,7 @@ function handleAction(room: Room, session: RoomSession, action: string, payload:
             }
 
             if (roundTopic === "random") {
-                const nextTopicSelection = getRandomTopicByGameIntensity(room.intensity, room.usedTopics);
-                if (!nextTopicSelection.topic || nextTopicSelection.totalPoolSize === 0) {
-                    throw new ActionError(400, "No hay temas aleatorios disponibles para esta intensidad.");
-                }
-
-                if (nextTopicSelection.recycled) {
-                    room.usedTopics = [];
-                }
-
-                room.usedTopics.push(nextTopicSelection.topic.id);
-                round.topicId = nextTopicSelection.topic.id;
-                round.topic = nextTopicSelection.topic;
-                round.roundTopic = "random";
-                round.selectedTopic = nextTopicSelection.topic.id;
+                assignNextConfiguredTopic(room, round);
             }
 
             if (roundTopic === "custom") {
@@ -617,25 +604,29 @@ function prepareNextRound(room: Room) {
     const round = getCurrentRound(room);
 
     if (room.topicSelectionMode === "automatic") {
-        const nextTopicSelection = getRandomTopicByGameIntensity(room.intensity, room.usedTopics);
-        if (!nextTopicSelection.topic || nextTopicSelection.totalPoolSize === 0) {
-            throw new ActionError(400, "No hay temas aleatorios disponibles para esta intensidad.");
-        }
-
-        if (nextTopicSelection.recycled) {
-            room.usedTopics = [];
-        }
-
-        room.usedTopics.push(nextTopicSelection.topic.id);
-        round.topicId = nextTopicSelection.topic.id;
-        round.topic = nextTopicSelection.topic;
-        round.roundTopic = "random";
-        round.selectedTopic = nextTopicSelection.topic.id;
+        assignNextConfiguredTopic(room, round);
         room.state = "preparation";
         return;
     }
 
     room.state = "topic_selection";
+}
+
+function assignNextConfiguredTopic(room: Room, round: Round) {
+    const nextTopicSelection = getNextTopicFromPool(room.topicConfig, room.usedTopics);
+    if (!nextTopicSelection.topic || nextTopicSelection.totalPoolSize === 0) {
+        throw new ActionError(400, "No hay temas disponibles con la configuracion elegida.");
+    }
+
+    if (nextTopicSelection.recycled) {
+        room.usedTopics = [];
+    }
+
+    room.usedTopics.push(nextTopicSelection.topic.id);
+    round.topicId = nextTopicSelection.topic.id;
+    round.topic = nextTopicSelection.topic;
+    round.roundTopic = "random";
+    round.selectedTopic = nextTopicSelection.topic.id;
 }
 
 function saveUserTopic(room: Room, text: string) {

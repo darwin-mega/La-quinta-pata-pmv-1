@@ -81,16 +81,7 @@ export default function MesaPage() {
         }
     }, [room?.state]);
 
-    useEffect(() => {
-        if (!room || room.mode !== "mesa" || room.state !== "lobby" || autoStartTriggeredRef.current) {
-            return;
-        }
-
-        autoStartTriggeredRef.current = true;
-        void dispatchAction("START_GAME");
-    }, [room]);
-
-    const dispatchAction = async (action: string, payload: any = {}) => {
+    const dispatchAction = useCallback(async (action: string, payload: any = {}) => {
         let attempts = 0;
         const maxAttempts = 2;
 
@@ -120,7 +111,16 @@ export default function MesaPage() {
         };
 
         return performAction();
-    };
+    }, [fetchState, roomId]);
+
+    useEffect(() => {
+        if (!room || room.mode !== "mesa" || room.state !== "lobby" || autoStartTriggeredRef.current) {
+            return;
+        }
+
+        autoStartTriggeredRef.current = true;
+        void dispatchAction("START_GAME");
+    }, [dispatchAction, room]);
 
     if (loading) {
         return (

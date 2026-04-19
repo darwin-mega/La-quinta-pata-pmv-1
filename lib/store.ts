@@ -1,6 +1,6 @@
 import { Redis } from "@upstash/redis";
 import { topics as systemTopics } from "@/data/topics";
-import { deriveLegacyGameIntensity, normalizeTopicConfigInput } from "@/lib/topic-engine";
+import { buildTopicConfigFromGameIntensity, deriveLegacyGameIntensity, normalizeTopicConfigInput } from "@/lib/topic-engine";
 import { DebateTopic, RoomTopicConfig, SavedTopic } from "@/lib/topic-types";
 
 export type GameIntensity = "liviano" | "medio" | "filoso";
@@ -114,7 +114,10 @@ const buildFallbackTopic = (topicId: string): DebateTopic => ({
 });
 
 const hydrateRoom = (room: Room): Room => {
-    const normalizedTopicConfig = normalizeTopicConfigInput((room as Partial<Room>).topicConfig);
+    const rawTopicConfig = (room as Partial<Room>).topicConfig;
+    const normalizedTopicConfig = rawTopicConfig === undefined && room.intensity
+        ? buildTopicConfigFromGameIntensity(room.intensity)
+        : normalizeTopicConfigInput(rawTopicConfig);
     const normalizedRounds = Array.isArray(room.rounds)
         ? room.rounds.map(round => {
             const roundTopicId = typeof round.topicId === "string" ? round.topicId : "";
@@ -325,6 +328,42 @@ export const mutateRoom = async <T>(id: string, mutator: (room: Room) => MaybePr
 export const updateRoom = async (id: string, updates: Partial<Room>): Promise<void> => {
     await mutateRoom(id, room => {
         Object.assign(room, updates);
+    });
+};
+
+const getTimerSignature = (room: Room) => {
+    const round = room.rounds[room.currentRoundIndex];
+
+    return JSON.stringify({
+        state: room.state,
+        activeSpeaker: round?.activeSpeaker,
+        debateState: round?.debateState,
+        timeRemainingA: round?.timeRemainingA,
+        timeRemainingB: round?.timeRemainingB,
+        transitionRemaining: round?.transitionRemaining,
+        turnStartTime: round?.turnStartTime,
+    });
+};
+
+export const getRoomWithSyncedTimers = async (id: string): Promise<Room | undefined> => {
+    return withQueuedRoomOperation(id, async () => {
+        const lockToken = await acquireRedisRoomLock(id);
+
+        try {
+            const room = await getRoom(id);
+            if (!room) return undefined;
+
+            const originalTimerSignature = getTimerSignature(room);
+            syncTimers(room);
+
+            if (getTimerSignature(room) !== originalTimerSignature) {
+                await saveRoom(room);
+            }
+
+            return room;
+        } finally {
+            await releaseRedisRoomLock(id, lockToken);
+        }
     });
 };
 

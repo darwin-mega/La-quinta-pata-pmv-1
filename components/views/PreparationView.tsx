@@ -17,7 +17,7 @@ export default function PreparationView({ room, myRole, onStartDebate, isHost }:
 
             <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <h3 className="title-serif" style={{ fontSize: '1.3rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-                    "{topic.statement}"
+                    &quot;{topic.statement}&quot;
                 </h3>
 
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>

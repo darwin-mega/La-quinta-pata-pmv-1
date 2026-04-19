@@ -13,7 +13,7 @@ export default function MesaPreparationView({ room, onStartDebate }: { room: Roo
         <div className={`${styles.shell} ${styles.shellNarrow}`}>
             <div className={styles.centerHeader}>
                 <span className={styles.eyebrow}>Nuevo debate: {topic?.category}</span>
-                <h1 className={styles.statement}>"{topic?.statement}"</h1>
+                <h1 className={styles.statement}>&quot;{topic?.statement}&quot;</h1>
             </div>
 
             <div className={styles.cardsGrid}>

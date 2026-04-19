@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generatePlayerId, mutateRoom } from "@/lib/store";
 import { setRoomSessionCookie } from "@/lib/session";
+import { MAX_PLAYER_NAME_LENGTH } from "@/lib/topic-types";
 
 class JoinError extends Error {
     status: number;
@@ -22,6 +23,10 @@ export async function POST(req: Request, { params }: { params: { roomId: string 
 
         if (!playerName) {
             return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
+        }
+
+        if (playerName.length > MAX_PLAYER_NAME_LENGTH) {
+            return NextResponse.json({ error: `Tu nombre puede tener hasta ${MAX_PLAYER_NAME_LENGTH} caracteres.` }, { status: 400 });
         }
 
         const result = await mutateRoom(roomId, room => {

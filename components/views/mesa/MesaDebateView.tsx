@@ -15,31 +15,44 @@ export default function MesaDebateView({
     onFinishDebate: () => void
 }) {
     const [showFallacies, setShowFallacies] = useState(false);
+    const [elapsedSec, setElapsedSec] = useState(0);
+    const [lastSpeaker, setLastSpeaker] = useState("");
+    const [accusedFallacyId, setAccusedFallacyId] = useState<string | null>(null);
+    const [selectingAccuser, setSelectingAccuser] = useState(false);
     const round = room.rounds[room.currentRoundIndex];
+    const activeSpeaker = round?.activeSpeaker;
+    const isSpeakingState = round?.debateState === "speaking";
+
+    useEffect(() => {
+        if (!round?.turnStartTime || round.debateState === "finished") {
+            setElapsedSec(0);
+            return;
+        }
+
+        const turnStartTime = round.turnStartTime;
+        const tick = () => {
+            setElapsedSec(Math.floor((Date.now() - turnStartTime) / 1000));
+        };
+        tick();
+        const int = setInterval(tick, 200);
+        return () => clearInterval(int);
+    }, [round?.turnStartTime, round?.debateState]);
+
+    useEffect(() => {
+        if (isSpeakingState && activeSpeaker && activeSpeaker !== lastSpeaker) {
+            playTurnSound();
+            setLastSpeaker(activeSpeaker);
+        }
+    }, [isSpeakingState, activeSpeaker, lastSpeaker]);
+
     if (!round) return null;
 
     const topic = round.topic;
     const pA = room.players.find(p => p.id === round.debatienteA_Id);
     const pB = room.players.find(p => p.id === round.debatienteB_Id);
 
-    const isSpeakingState = round.debateState === "speaking";
     const isTransitionState = round.debateState === "transition";
     const isFinishedState = round.debateState === "finished";
-
-    const [elapsedSec, setElapsedSec] = useState(0);
-    useEffect(() => {
-        if (!round.turnStartTime || round.debateState === "finished") {
-            setElapsedSec(0);
-            return;
-        }
-
-        const tick = () => {
-            setElapsedSec(Math.floor((Date.now() - round.turnStartTime!) / 1000));
-        };
-        tick();
-        const int = setInterval(tick, 200);
-        return () => clearInterval(int);
-    }, [round.turnStartTime, round.debateState]);
 
     let displayTimeA = round.timeRemainingA;
     let displayTimeB = round.timeRemainingB;
@@ -55,18 +68,8 @@ export default function MesaDebateView({
         }
     }
 
-    const [lastSpeaker, setLastSpeaker] = useState("");
-    useEffect(() => {
-        if (isSpeakingState && round.activeSpeaker !== lastSpeaker) {
-            playTurnSound();
-            setLastSpeaker(round.activeSpeaker);
-        }
-    }, [isSpeakingState, round.activeSpeaker, lastSpeaker]);
-
     const bothExhausted = round.timeRemainingA === 0 && round.timeRemainingB === 0;
     const activePlayer = round.activeSpeaker === "debatiente_a" ? pA : pB;
-    const [accusedFallacyId, setAccusedFallacyId] = useState<string | null>(null);
-    const [selectingAccuser, setSelectingAccuser] = useState(false);
 
     const handleSignalClick = (fId: string) => {
         setAccusedFallacyId(fId);
@@ -87,7 +90,7 @@ export default function MesaDebateView({
         <div className={styles.shell}>
             <div className={styles.topicStrip}>
                 <span className={styles.topicStripTitle}>Tema en debate</span>
-                <h3 className={styles.topicStripText}>"{topic?.statement}"</h3>
+                <h3 className={styles.topicStripText}>&quot;{topic?.statement}&quot;</h3>
             </div>
 
             {isTransitionState && (

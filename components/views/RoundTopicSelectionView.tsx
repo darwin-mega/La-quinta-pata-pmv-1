@@ -21,14 +21,15 @@ export default function RoundTopicSelectionView({
     const [savedTopicId, setSavedTopicId] = useState(room.savedTopics[0]?.id || "");
     const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const firstSavedTopicId = room.savedTopics[0]?.id || "";
 
     useEffect(() => {
         setChoice("random");
         setCustomTopic("");
-        setSavedTopicId(room.savedTopics[0]?.id || "");
+        setSavedTopicId(firstSavedTopicId);
         setError("");
         setSubmitting(false);
-    }, [room.currentRoundIndex, room.savedTopics.length]);
+    }, [room.currentRoundIndex, firstSavedTopicId]);
 
     if (!round) return null;
 
