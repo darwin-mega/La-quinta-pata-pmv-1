@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { GameDuration, GameIntensity } from "@/lib/store";
 import { getGameDurationLabel, getGameIntensityLabel } from "@/lib/game";
+import { MAX_PLAYER_NAME_LENGTH } from "@/lib/topic-types";
 
 type PlayMode = "individual" | "mesa";
 type FlowStep = 1 | 2 | 3;
@@ -41,9 +42,38 @@ export default function CreateRoom() {
     const [error, setError] = useState("");
     const [playMode, setPlayMode] = useState<PlayMode | null>(null);
     const [playerCount, setPlayerCount] = useState<number | undefined>(undefined);
+    const [playerNames, setPlayerNames] = useState<string[]>([]);
     const [intensity, setIntensity] = useState<GameIntensity>("medio");
     const [duration, setDuration] = useState<GameDuration>("corta");
     const [topicSelectionMode, setTopicSelectionMode] = useState<"automatic" | "manual">("automatic");
+
+    const getMesaPlayerNames = (count = playerCount) => {
+        if (!count) return [];
+
+        return Array.from({ length: count }, (_, index) => {
+            return playerNames[index]?.trim() || `Jugador ${index + 1}`;
+        });
+    };
+
+    const hasDuplicateNames = (names: string[]) => {
+        return new Set(names.map(name => name.toLowerCase())).size !== names.length;
+    };
+
+    const validateMesaNames = () => {
+        const names = getMesaPlayerNames();
+
+        if (names.some(name => name.length > MAX_PLAYER_NAME_LENGTH)) {
+            setError(`Cada jugador puede tener hasta ${MAX_PLAYER_NAME_LENGTH} caracteres.`);
+            return false;
+        }
+
+        if (hasDuplicateNames(names)) {
+            setError("No puede haber nombres repetidos en la mesa.");
+            return false;
+        }
+
+        return true;
+    };
 
     const handleModeSelect = (nextMode: PlayMode) => {
         setError("");
@@ -51,17 +81,43 @@ export default function CreateRoom() {
 
         if (nextMode === "individual") {
             setPlayerCount(undefined);
+            setPlayerNames([]);
             setStep(3);
             return;
         }
 
         setPlayerCount(undefined);
+        setPlayerNames([]);
         setStep(2);
     };
 
     const handlePlayerCountSelect = (count: number) => {
         setError("");
         setPlayerCount(count);
+        setPlayerNames(currentNames =>
+            Array.from({ length: count }, (_, index) => currentNames[index] || "")
+        );
+    };
+
+    const handlePlayerNameChange = (index: number, value: string) => {
+        setError("");
+        setPlayerNames(currentNames => {
+            const nextNames = [...currentNames];
+            nextNames[index] = value;
+            return nextNames;
+        });
+    };
+
+    const handlePlayersContinue = () => {
+        if (!playerCount) {
+            setError("Elegi cuantos jugadores son.");
+            return;
+        }
+
+        if (!validateMesaNames()) {
+            return;
+        }
+
         setStep(3);
     };
 
@@ -89,6 +145,10 @@ export default function CreateRoom() {
             return;
         }
 
+        if (playMode === "mesa" && !validateMesaNames()) {
+            return;
+        }
+
         try {
             setLoading(true);
             setError("");
@@ -96,6 +156,7 @@ export default function CreateRoom() {
             const payload = {
                 mode: playMode,
                 playerCount: playMode === "mesa" ? playerCount : undefined,
+                playerNames: playMode === "mesa" ? getMesaPlayerNames() : undefined,
                 intensity,
                 duration,
                 topicSelectionMode,
@@ -169,12 +230,45 @@ export default function CreateRoom() {
                                     key={count}
                                     type="button"
                                     onClick={() => handlePlayerCountSelect(count)}
-                                    className={styles.countButton}
+                                    className={`${styles.countButton} ${playerCount === count ? styles.countButtonActive : ""}`}
                                 >
                                     {count}
                                 </button>
                             ))}
                         </div>
+
+                        {playerCount && (
+                            <div className={styles.playerNamesBlock}>
+                                <div className={styles.playerNamesHeader}>
+                                    <span className={styles.groupLabel}>Participantes</span>
+                                    <span className={styles.namesHint}>Podes dejar campos vacios para usar nombres automaticos.</span>
+                                </div>
+
+                                <div className={styles.playerNamesGrid}>
+                                    {Array.from({ length: playerCount }, (_, index) => (
+                                        <label key={index} className={styles.playerNameField}>
+                                            <span>Jugador {index + 1}</span>
+                                            <input
+                                                type="text"
+                                                value={playerNames[index] || ""}
+                                                maxLength={MAX_PLAYER_NAME_LENGTH}
+                                                placeholder={`Jugador ${index + 1}`}
+                                                onChange={(event) => handlePlayerNameChange(index, event.target.value)}
+                                                className={styles.input}
+                                            />
+                                        </label>
+                                    ))}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={handlePlayersContinue}
+                                    className={styles.primaryButton}
+                                >
+                                    Continuar
+                                </button>
+                            </div>
+                        )}
                     </section>
                 )}
 

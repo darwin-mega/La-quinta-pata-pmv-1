@@ -101,6 +101,53 @@
     background: rgba(59, 130, 246, 0.12);
 }
 
+.countButtonActive {
+    border-color: rgba(59, 130, 246, 0.6);
+    background: rgba(59, 130, 246, 0.16);
+    box-shadow: 0 12px 28px rgba(59, 130, 246, 0.16);
+}
+
+.playerNamesBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: 0.25rem;
+}
+
+.playerNamesHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.namesHint {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.playerNamesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.85rem;
+}
+
+.playerNameField {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.playerNameField span {
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
 .configBlock {
     display: flex;
     flex-direction: column;
@@ -303,6 +350,10 @@
     .countButton {
         padding: 1rem 0.75rem;
         font-size: 1.2rem;
+    }
+
+    .playerNamesGrid {
+        grid-template-columns: 1fr;
     }
 
     .optionButton {

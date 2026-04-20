@@ -97,10 +97,18 @@ export async function POST(req: Request) {
         }
 
         const finalMesaPlayerNames = validatedMode === "mesa"
-            ? (normalizedPlayerNames.length > 0
-                ? normalizedPlayerNames
-                : Array.from({ length: normalizedPlayerCount }, (_, index) => `Jugador ${index + 1}`))
+            ? Array.from({ length: normalizedPlayerCount }, (_, index) => {
+                const submittedName = Array.isArray(playerNames) && typeof playerNames[index] === "string"
+                    ? playerNames[index].trim()
+                    : "";
+
+                return submittedName || `Jugador ${index + 1}`;
+            })
             : [];
+
+        if (validatedMode === "mesa" && finalMesaPlayerNames.some(playerName => playerName.length > MAX_PLAYER_NAME_LENGTH)) {
+            return NextResponse.json({ error: `Cada jugador puede tener hasta ${MAX_PLAYER_NAME_LENGTH} caracteres en su nombre.` }, { status: 400 });
+        }
 
         if (validatedMode === "mesa") {
             const uniqueNames = new Set(finalMesaPlayerNames.map(playerName => playerName.toLowerCase()));
