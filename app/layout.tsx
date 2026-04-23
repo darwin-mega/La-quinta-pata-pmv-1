@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import SoundIdentity from '@/components/SoundIdentity';
 import Watermark from '@/components/Watermark';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
     title: 'La Quinta Pata - Debate y Argumentación',
@@ -32,6 +33,7 @@ export default function RootLayout({
                 <Watermark />
                 <SoundIdentity />
                 {children}
+                <Analytics />
             </body>
         </html>
     );
