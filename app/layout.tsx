@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     appleWebApp: {
         capable: true,
         statusBarStyle: 'black-translucent',
-        title: 'La Jaula'
+        title: 'La Quinta Pata'
     },
 };
 

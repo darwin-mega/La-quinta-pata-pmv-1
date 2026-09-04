@@ -11,18 +11,19 @@ export type RoomSession = {
 
 const COOKIE_MAX_AGE_SEC = 60 * 60 * 4;
 const configuredSessionSecret = (
+    process.env.LA_QUINTA_PATA_SESSION_SECRET ||
     process.env.LA_JAULA_SESSION_SECRET ||
     process.env.NEXTAUTH_SECRET ||
     process.env.KV_REST_API_TOKEN ||
     process.env.UPSTASH_REDIS_REST_TOKEN
 );
-const DEV_SESSION_SECRET = "la-jaula-dev-secret";
+const DEV_SESSION_SECRET = "la-quinta-pata-dev-secret";
 
 const getSessionSecret = () => {
     if (configuredSessionSecret) return configuredSessionSecret;
 
     if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
-        throw new Error("Falta LA_JAULA_SESSION_SECRET para firmar sesiones en produccion.");
+        throw new Error("Falta LA_QUINTA_PATA_SESSION_SECRET para firmar sesiones en produccion.");
     }
 
     return DEV_SESSION_SECRET;

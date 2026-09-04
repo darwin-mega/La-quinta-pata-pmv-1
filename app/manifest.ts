@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'La Jaula Debate',
-    short_name: 'La Jaula',
-    description: 'El juego de debate social',
+    name: 'La Quinta Pata',
+    short_name: 'Quinta Pata',
+    description: 'Juego presencial de debate, argumentación y detección de falacias',
     start_url: '/',
     display: 'standalone',
     background_color: '#121319',

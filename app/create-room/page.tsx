@@ -174,8 +174,8 @@ export default function CreateRoom() {
                 throw new Error(data.error || "Error al crear la sala");
             }
 
-            localStorage.setItem(`laJaula_playerId_${data.room.id}`, data.playerId);
-            localStorage.setItem(`laJaula_isHost_${data.room.id}`, "true");
+            localStorage.setItem(`laQuintaPata_playerId_${data.room.id}`, data.playerId);
+            localStorage.setItem(`laQuintaPata_isHost_${data.room.id}`, "true");
 
             if (playMode === "mesa") {
                 router.push(`/mesa/${data.room.id}`);

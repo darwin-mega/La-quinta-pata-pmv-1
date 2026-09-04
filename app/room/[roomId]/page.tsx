@@ -27,8 +27,10 @@ export default function RoomPage() {
     const abortControllerRef = useRef<AbortController | null>(null);
 
     useEffect(() => {
-        const savedPid = localStorage.getItem(`laJaula_playerId_${roomId}`);
-        const savedRole = localStorage.getItem(`laJaula_isHost_${roomId}`);
+        const savedPid = localStorage.getItem(`laQuintaPata_playerId_${roomId}`)
+            || localStorage.getItem(`laJaula_playerId_${roomId}`);
+        const savedRole = localStorage.getItem(`laQuintaPata_isHost_${roomId}`)
+            || localStorage.getItem(`laJaula_isHost_${roomId}`);
         if (savedPid) setPlayerId(savedPid);
         if (savedRole === "true") setIsHost(true);
     }, [roomId]);

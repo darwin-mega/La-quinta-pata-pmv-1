@@ -251,9 +251,14 @@ export const getRoom = async (id: string): Promise<Room | undefined> => {
 
     if (redis) {
         try {
-            const data = await redis.get<Room>(ROOM_KEY(key));
+            const data = await redis.get<Room | string>(ROOM_KEY(key));
             if (data) {
-                const normalizedRoom = hydrateRoom(data);
+                // Older deployments stored an already-stringified object. Upstash
+                // serializes values itself, so accept both shapes during migration.
+                const storedRoom = typeof data === "string"
+                    ? JSON.parse(data) as Room
+                    : data;
+                const normalizedRoom = hydrateRoom(storedRoom);
                 globalStore.rooms[key] = normalizedRoom;
                 return normalizedRoom;
             }
@@ -278,7 +283,7 @@ export const saveRoom = async (room: Room): Promise<void> => {
 
     if (redis) {
         try {
-            await redis.set(ROOM_KEY(normalizedRoom.id), JSON.stringify(normalizedRoom), { ex: ROOM_TTL });
+            await redis.set(ROOM_KEY(normalizedRoom.id), normalizedRoom, { ex: ROOM_TTL });
         } catch (err) {
             console.error("[Redis] saveRoom error:", err);
         }

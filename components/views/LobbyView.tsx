@@ -38,7 +38,7 @@ export default function LobbyView({
         }
     }, [room.state]);
 
-    let baseUrl = typeof window !== "undefined" ? window.location.origin : "https://lajaula.app";
+    let baseUrl = typeof window !== "undefined" ? window.location.origin : "https://la-quinta-pata.vercel.app";
     if (typeof window !== "undefined" && window.location.hostname === "localhost" && localIp) {
         baseUrl = `http://${localIp}:${window.location.port || 3000}`;
     }

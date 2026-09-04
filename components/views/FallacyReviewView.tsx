@@ -40,7 +40,7 @@ export default function FallacyReviewView({ room, playerId, isHost, onVote }: {
                 <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.2 }}>
                     <ShieldAlert size={80} />
                 </div>
-                <h1 style={{ fontSize: '1.6rem', margin: 0, textTransform: 'uppercase', fontWeight: 900, letterSpacing: '0.05em' }}>¡JUICIO EXPRESS!</h1>
+                <h1 style={{ fontSize: '1.6rem', margin: 0, textTransform: 'uppercase', fontWeight: 900, letterSpacing: '0.05em' }}>¡DESAFÍO DE FALACIA!</h1>
                 <p style={{ margin: '0.2rem 0 0', fontWeight: 700, fontSize: '0.9rem', opacity: 0.9 }}>EL DEBATE SE HA DETENIDO</p>
             </div>
 
@@ -132,7 +132,7 @@ export default function FallacyReviewView({ room, playerId, isHost, onVote }: {
                     <div className="glass-panel" style={{ textAlign: 'center', padding: '2.5rem 1.5rem', background: 'rgba(255, 94, 58, 0.05)', border: '1px solid rgba(255, 94, 58, 0.2)', borderRadius: 'var(--radius-md)' }}>
                         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{playerId === challenge.accusedId ? "🤐" : "⚖️"}</div>
                         <h3 style={{ color: 'white', fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-                            {playerId === challenge.accusedId ? "Estás bajo juicio" : "Denuncia realizada"}
+                            {playerId === challenge.accusedId ? "Tu argumento fue cuestionado" : "Desafío realizado"}
                         </h3>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
                             Como parte involucrada, no podés votar en esta instancia.<br/>El jurado está deliberando...

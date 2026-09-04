@@ -43,8 +43,8 @@ export default function JoinRoom() {
                 }
 
                 // Save identity locally
-                localStorage.setItem(`laJaula_playerId_${roomId}`, data.playerId);
-                localStorage.setItem(`laJaula_isHost_${roomId}`, 'false');
+                localStorage.setItem(`laQuintaPata_playerId_${roomId}`, data.playerId);
+                localStorage.setItem(`laQuintaPata_isHost_${roomId}`, 'false');
                 router.push(`/room/${roomId}`);
                 return true;
             } catch (err: any) {

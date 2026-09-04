@@ -158,7 +158,7 @@ export default function VotingView({
                         <div style={{ fontSize: "5rem", marginBottom: "1.5rem", opacity: 0.8 }}>🗳️</div>
                         <h3 style={{ fontSize: "1.5rem", marginBottom: "0.5rem", color: "white", fontWeight: 800 }}>Voto Registrado</h3>
                         <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem" }}>
-                            Tu juicio ha sido emitido.
+                            Tu voto ha sido emitido.
                             <br />
                             Esperando al resto de los jueces...
                         </p>

@@ -15,7 +15,8 @@ class JoinError extends Error {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function POST(req: Request, { params }: { params: { roomId: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ roomId: string }> }) {
+    const params = await props.params;
     try {
         const roomId = params.roomId.toUpperCase();
         const body = await req.json();
