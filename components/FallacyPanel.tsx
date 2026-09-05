@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fallacies, getFallaciesByHierarchy, quickFallacyIds, FallacyLevel, Fallacy } from "@/data/fallacies";
+import { fallacies, fallacyDistinctions, getFallaciesByHierarchy, quickFallacyIds, FallacyLevel, Fallacy } from "@/data/fallacies";
 
 export default function FallacyPanel({ onSignal, onClose }: { onSignal: (fId: string) => void, onClose: () => void }) {
     const categories = getFallaciesByHierarchy();
@@ -44,6 +44,9 @@ export default function FallacyPanel({ onSignal, onClose }: { onSignal: (fId: st
                         <div style={{ marginBottom: '1.5rem' }}>
                             <p style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.5rem', letterSpacing: '0.1em' }}>{f.technicalName}</p>
                             <p style={{ color: 'var(--text-primary)', fontSize: '1.05rem', lineHeight: 1.5, marginBottom: '1rem', fontWeight: 400 }}>{f.definition}</p>
+                            <p style={{ padding: '0.75rem', color: '#bfdbfe', fontSize: '0.82rem', lineHeight: 1.45, background: 'rgba(59,130,246,0.09)', borderRadius: 'var(--radius-sm)', marginBottom: '1rem' }}>
+                                <strong>Cómo distinguirla:</strong> {fallacyDistinctions[f.id]}
+                            </p>
                             <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent-color)' }}>
                                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontStyle: 'italic', lineHeight: 1.4 }}>“{f.example}”</p>
                             </div>

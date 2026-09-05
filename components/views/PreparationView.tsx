@@ -1,5 +1,6 @@
 import { Room } from "@/lib/store";
 import Timer from "../Timer";
+import TopicSources from "../TopicSources";
 
 export default function PreparationView({ room, myRole, onStartDebate, isHost }: { room: Room, myRole: string, onStartDebate: () => void, isHost: boolean }) {
     const round = room.rounds[room.currentRoundIndex];
@@ -26,6 +27,8 @@ export default function PreparationView({ room, myRole, onStartDebate, isHost }:
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>
                     {topic.context}
                 </p>
+
+                <TopicSources topic={topic} />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
                     <div style={{ background: 'var(--surface-hover)', padding: '0.75rem', borderRadius: '4px' }}>

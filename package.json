@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "audio:generate": "node scripts/generate-audio.mjs"
+    "audio:generate": "node scripts/generate-audio.mjs",
+    "content:audit": "node scripts/audit-content.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.38.4",

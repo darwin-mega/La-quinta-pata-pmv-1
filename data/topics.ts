@@ -1,4 +1,4 @@
-import { DebateTopic, TOPIC_CATEGORY_OPTIONS, TopicCategoryId, TopicIntensity } from "@/lib/topic-types";
+import { DebateTopic, TOPIC_CATEGORY_OPTIONS, TopicCategoryId, TopicIntensity, TopicReference } from "@/lib/topic-types";
 
 export type LegacyTopicIntensity = "liviano" | "medio" | "filoso";
 
@@ -9,6 +9,8 @@ type TopicSeed = {
     statement: string;
     angleA: string;
     angleB: string;
+    editorialNote?: string;
+    references?: TopicReference[];
 };
 
 const CATEGORY_LABELS = new Map(
@@ -46,6 +48,8 @@ const toDebateTopic = (seed: TopicSeed): DebateTopic => ({
     angleA: seed.angleA,
     angleB: seed.angleB,
     prompts: buildPrompts(),
+    editorialNote: seed.editorialNote,
+    references: seed.references,
     enabled: true,
 });
 
@@ -103,9 +107,9 @@ const rawTopics: TopicSeed[] = [
         id: "l7",
         legacyIntensity: "liviano",
         category: "sociedad",
-        statement: "Hoy pesa mas como decis algo que si realmente tenes razon.",
-        angleA: "La forma suele ganar aunque el fondo sea mas debil.",
-        angleB: "Al final la razon pesa mas que la puesta en escena.",
+        statement: "Pedir disculpas en publico repara mas de lo que expone.",
+        angleA: "Reconocer el dano puede reconstruir confianza y fijar un ejemplo.",
+        angleB: "La presion publica puede producir disculpas teatrales y castigo sin reparacion.",
     },
     {
         id: "l8",
@@ -127,17 +131,17 @@ const rawTopics: TopicSeed[] = [
         id: "l10",
         legacyIntensity: "liviano",
         category: "actualidad",
-        statement: "Para informarse, ver contenido corto sirve menos de lo que muchos creen.",
-        angleA: "Lo breve rara vez alcanza para entender un tema complejo.",
-        angleB: "Si esta bien hecho, el formato corto puede informar bastante.",
+        statement: "Los medios deberian corregir sus errores con la misma visibilidad que la noticia original.",
+        angleA: "Una correccion discreta no compensa el alcance del dato equivocado.",
+        angleB: "Dar igual espacio a cada correccion puede distorsionar la importancia real del error.",
     },
     {
         id: "l11",
         legacyIntensity: "liviano",
         category: "educacion",
-        statement: "Usar inteligencia artificial para estudiar puede ensenar tanto como estudiar solo.",
-        angleA: "Puede devolverte preguntas, estructura y ejemplos muy utiles.",
-        angleB: "Sin esfuerzo propio profundo el aprendizaje queda demasiado hueco.",
+        statement: "Los examenes con tiempo limitado miden peor de lo que entrenan.",
+        angleA: "Premian velocidad y manejo de presion mas que comprension duradera.",
+        angleB: "Obligan a recuperar y aplicar conocimientos sin apoyos externos.",
     },
     {
         id: "l12",
@@ -193,9 +197,9 @@ const rawTopics: TopicSeed[] = [
         id: "m3",
         legacyIntensity: "medio",
         category: "sociedad",
-        statement: "En redes, provocar funciona mas que explicar.",
-        angleA: "El escandalo circula mejor que la claridad.",
-        angleB: "Explicar bien sigue pesando cuando alguien realmente quiere entender.",
+        statement: "Bloquear en redes a quien piensa distinto puede ser una forma sana de poner limites.",
+        angleA: "Nadie esta obligado a exponerse a hostilidad o discusiones permanentes.",
+        angleB: "Usarlo ante cualquier desacuerdo encierra a cada persona en su propia burbuja.",
     },
     {
         id: "m4",
@@ -348,9 +352,9 @@ const rawTopics: TopicSeed[] = [
         id: "f6",
         legacyIntensity: "filoso",
         category: "etica",
-        statement: "Castigar puede importar mas que rehabilitar.",
-        angleA: "La justicia tambien necesita sancion y no solo reinsercion.",
-        angleB: "Sin rehabilitacion el castigo deja intacto el problema.",
+        statement: "Una confesion obtenida sin asistencia legal nunca deberia alcanzar para condenar.",
+        angleA: "La presion y la desigualdad frente al Estado vuelven esa prueba demasiado riesgosa.",
+        angleB: "Descartarla siempre tambien puede excluir admisiones libres y evidencia relevante.",
     },
     {
         id: "f7",
@@ -364,9 +368,9 @@ const rawTopics: TopicSeed[] = [
         id: "f8",
         legacyIntensity: "filoso",
         category: "filosofia",
-        statement: "Que una mayoria quiera algo no alcanza para volverlo justo.",
-        angleA: "La justicia no depende solo del numero de votos.",
-        angleB: "Sin criterio comun mayoritario, la legitimidad se vuelve inestable.",
+        statement: "La suerte influye tanto en nuestras decisiones que deberia cambiar como juzgamos moralmente.",
+        angleA: "Resultados y oportunidades fuera de control alteran cuanto puede atribuirse a cada persona.",
+        angleB: "Sin responsabilidad por decisiones tomadas, la evaluacion moral pierde sentido.",
     },
     {
         id: "f9",
@@ -380,9 +384,9 @@ const rawTopics: TopicSeed[] = [
         id: "f10",
         legacyIntensity: "filoso",
         category: "politica",
-        statement: "La seguridad puede pesar mas que la libertad en ciertos casos.",
-        angleA: "Sin un minimo de orden, la libertad real se vuelve inviable.",
-        angleB: "Ceder libertad por seguridad suele abrir abusos duraderos.",
+        statement: "Votar deberia ser obligatorio porque la democracia tambien exige responsabilidades.",
+        angleA: "La participacion amplia mejora legitimidad y obliga a considerar a toda la sociedad.",
+        angleB: "El Estado no deberia forzar una expresion politica ni castigar la abstencion.",
     },
     {
         id: "f11",
@@ -404,9 +408,9 @@ const rawTopics: TopicSeed[] = [
         id: "f13",
         legacyIntensity: "filoso",
         category: "etica",
-        statement: "Hay ideas cuyo dano potencial pesa mas que el derecho a decirlas sin limite.",
-        angleA: "No toda expresion merece el mismo margen si el dano es extremo.",
-        angleB: "Limitar ideas por su posible dano pone demasiado poder en el censor.",
+        statement: "Las figuras publicas deberian aceptar una perdida mayor de privacidad que el resto.",
+        angleA: "Su influencia y poder justifican mayor escrutinio sobre conductas relevantes.",
+        angleB: "La funcion publica no convierte toda su vida personal en asunto colectivo.",
     },
     {
         id: "f14",
@@ -444,25 +448,25 @@ const rawTopics: TopicSeed[] = [
         id: "f18",
         legacyIntensity: "filoso",
         category: "etica",
-        statement: "Un buen fin puede justificar medios moralmente sucios.",
-        angleA: "En algunas situaciones el resultado evita un dano mayor.",
-        angleB: "Si los medios se pudren demasiado, tambien se pudre el fin.",
+        statement: "La lealtad a una institucion deja de ser virtud cuando impide denunciar abusos.",
+        angleA: "Evitar el dano y proteger a terceros pesa mas que guardar silencio.",
+        angleB: "Romper confidencialidad sin agotar otros caminos tambien puede causar injusticias.",
     },
     {
         id: "f19",
         legacyIntensity: "filoso",
         category: "filosofia",
-        statement: "La verdad no siempre es lo que mas conviene a una sociedad.",
-        angleA: "A veces cierta verdad puede desestabilizar mas de lo que ayuda.",
-        angleB: "Sin verdad compartida una sociedad termina perdiendo rumbo.",
+        statement: "La conciencia podria explicarse por completo como un proceso fisico del cerebro.",
+        angleA: "No hace falta postular otra sustancia si la experiencia depende del funcionamiento cerebral.",
+        angleB: "Describir procesos cerebrales aun no explica por que existe una experiencia subjetiva.",
     },
     {
         id: "f20",
         legacyIntensity: "filoso",
         category: "politica",
-        statement: "La libertad de expresion no deberia pesar mas que todo lo demas.",
-        angleA: "Hay otros bienes publicos que a veces pueden pesar tanto o mas.",
-        angleB: "Cuando ese derecho cede demasiado, todo lo demas queda expuesto.",
+        statement: "Las plataformas deberian responder legalmente cuando amplifican mentiras virales previsibles.",
+        angleA: "Sus algoritmos deciden alcance y beneficio, por lo que tambien generan responsabilidad.",
+        angleB: "Hacerlas responsables puede incentivar censura preventiva y concentrar mas poder privado.",
     },
     {
         id: "f21",
@@ -492,9 +496,9 @@ const rawTopics: TopicSeed[] = [
         id: "f24",
         legacyIntensity: "filoso",
         category: "cultura_pop",
-        statement: "Una obra puede seguir siendo admirable aunque su autor haya sido una mala persona.",
-        angleA: "La obra puede exceder moralmente a quien la produjo.",
-        angleB: "Admirarla sin reservas tambien puede blanquear al autor.",
+        statement: "Una obra creada principalmente con inteligencia artificial puede ser arte genuino.",
+        angleA: "La intencion, seleccion y efecto de la obra pueden importar mas que la herramienta.",
+        angleB: "Sin una experiencia humana que produzca la forma, la autoria artistica queda vacia.",
     },
     {
         id: "f25",
@@ -566,9 +570,9 @@ const rawTopics: TopicSeed[] = [
         id: "f33",
         legacyIntensity: "filoso",
         category: "filosofia",
-        statement: "La religion hace mas bien que mal en una sociedad.",
-        angleA: "Todavia ofrece sentido, contencion y limites morales utiles.",
-        angleB: "Su influencia tambien arrastra dogmas y exclusiones costosas.",
+        statement: "El sufrimiento inocente es un argumento fuerte contra la existencia de un Dios omnipotente y bueno.",
+        angleA: "Parece dificil conciliar un mal extremo e inmerecido con poder y bondad perfectos.",
+        angleB: "La libertad, los limites humanos o bienes que no vemos pueden evitar esa contradiccion.",
     },
     {
         id: "f34",
@@ -618,9 +622,14 @@ const rawTopics: TopicSeed[] = [
     },
     {
         id: "f40", legacyIntensity: "filoso", category: "etica",
-        statement: "La eutanasia deberia permitirse a adultos con sufrimiento irreversible.",
-        angleA: "Decidir el final puede ser parte de la dignidad y evitar dolor intolerable.",
-        angleB: "Los errores, presiones y cambios de voluntad exigen proteger la vida con limites fuertes.",
+        statement: "La regulacion uruguaya de la eutanasia protege suficientemente una decision libre.",
+        angleA: "Los requisitos, controles medicos y posibilidad de revocar ofrecen garantias razonables.",
+        angleB: "La presion, los errores y la desigualdad de acceso a cuidados paliativos exigen mas resguardos.",
+        editorialNote: "Uruguay reglamento en 2026 la Ley de Muerte Digna con condiciones, controles y un protocolo asistencial.",
+        references: [
+            { label: "Ministerio de Salud Publica", url: "https://www.gub.uy/ministerio-salud-publica/comunicacion/noticias/ministerio-salud-publica-reglamento-ley-eutanasia-marco-garantias-perspectiva" },
+            { label: "Protocolo oficial", url: "https://www.gub.uy/ministerio-salud-publica/institucional/normativa/ordenanza-n-398026-protocolo-actuacion-para-proceso-muerte-digna-0" },
+        ],
     },
     {
         id: "f41", legacyIntensity: "filoso", category: "politica",
@@ -693,6 +702,125 @@ const rawTopics: TopicSeed[] = [
         statement: "Las carceles deberian reemplazarse en gran parte por sistemas de reparacion y reinsercion.",
         angleA: "El encierro suele reproducir violencia sin reparar a victimas ni reducir reincidencia.",
         angleB: "Hay danos y riesgos que requieren separacion, castigo y proteccion efectiva.",
+    },
+    {
+        id: "u1", legacyIntensity: "filoso", category: "actualidad",
+        statement: "Uruguay deberia frenar la prospeccion petrolera offshore hasta despejar sus riesgos ambientales.",
+        angleA: "La incertidumbre sobre biodiversidad y clima justifica aplicar un principio de precaucion.",
+        angleB: "Con controles y monitoreo, explorar recursos no equivale a decidir explotarlos.",
+        editorialNote: "Tema uruguayo en agenda: autorizaciones, seguimiento ambiental y una accion judicial enfrentaron precaucion ecologica con exploracion economica.",
+        references: [
+            { label: "Observatorio Ambiental Nacional", url: "https://www.ambiente.gub.uy/oan/proyectos/prospeccion-simica-3d-off-shore/" },
+            { label: "INDDHH", url: "https://www.gub.uy/institucion-nacional-derechos-humanos-uruguay/comunicacion/noticias/inddhh-interpone-accion-amparo-para-detener-prospeccion-sismica-offshore" },
+        ],
+    },
+    {
+        id: "u2", legacyIntensity: "medio", category: "tecnologia",
+        statement: "Uruguay deberia invertir en capacidades propias de inteligencia artificial antes que depender de soluciones extranjeras.",
+        angleA: "Desarrollar conocimiento local protege autonomia, datos y oportunidades productivas.",
+        angleB: "Comprar tecnologia probada puede ser mas rapido y eficiente para un pais pequeno.",
+        editorialNote: "Uruguay lanzo un laboratorio de IA para proyectos de impacto publico mientras la region debate como dejar de ser usuaria pasiva.",
+        references: [
+            { label: "Agesic — Laboratorio IA para el Bien", url: "https://www.gub.uy/agencia-gobierno-electronico-sociedad-informacion-conocimiento/comunicacion/noticias/uruguay-presenta-primer-laboratorio-ia-para-impulsar-proyectos-impacto" },
+            { label: "El Pais — IA en America Latina", url: "https://elpais.com/america-futura/2026-07-29/la-inteligencia-artificial-cuestion-de-etica-y-capacidades-en-america-latina-y-el-caribe.html" },
+        ],
+    },
+    {
+        id: "u3", legacyIntensity: "filoso", category: "politica",
+        statement: "Uruguay deberia priorizar prevencion social antes que nuevas carceles de maxima seguridad.",
+        angleA: "Atacar exclusion, educacion y reincidencia puede reducir violencia de forma mas duradera.",
+        angleB: "El crimen organizado exige primero capacidad inmediata de aislamiento y control estatal.",
+        editorialNote: "El Plan Nacional de Seguridad combina nuevas carceles, tecnologia, reforma institucional e intervenciones territoriales.",
+        references: [
+            { label: "Ministerio del Interior", url: "https://www.gub.uy/ministerio-interior/comunicacion/noticias/presidente-anuncio-incorporacion-policias-construccion-carceles-maxima" },
+        ],
+    },
+    {
+        id: "u4", legacyIntensity: "filoso", category: "politica",
+        statement: "Para sostener la seguridad social, es mas justo subir impuestos que aumentar la edad de retiro.",
+        angleA: "Distribuir el costo segun capacidad economica protege a quienes tuvieron trabajos mas duros.",
+        angleB: "Con vidas mas largas, aportar durante mas tiempo puede ser mas sostenible y equitativo entre generaciones.",
+        editorialNote: "El Dialogo Social uruguayo volvio a poner sobre la mesa como financiar proteccion social y priorizar sectores vulnerables.",
+        references: [
+            { label: "Presidencia — Dialogo Social", url: "https://www.gub.uy/presidencia/comunicacion/noticias/gobierno-reafirma-dialogo-base-para-reforma-seguridad-social-pone-foco" },
+        ],
+    },
+    {
+        id: "u5", legacyIntensity: "medio", category: "educacion",
+        statement: "La formacion docente en Uruguay deberia convertirse en una universidad publica autonoma.",
+        angleA: "La autonomia, investigacion y extension pueden fortalecer la profesion y su calidad academica.",
+        angleB: "Crear otra institucion puede sumar estructura sin resolver los problemas concretos del aula.",
+        editorialNote: "El Parlamento estudia la creacion de una Universidad de la Educacion publica y autonoma.",
+        references: [
+            { label: "Ministerio de Educacion y Cultura", url: "https://www.gub.uy/ministerio-educacion-cultura/comunicacion/noticias/mec-presento-ante-comision-educacion-cultura-del-senado-proyecto-ley" },
+        ],
+    },
+    {
+        id: "u6", legacyIntensity: "filoso", category: "actualidad",
+        statement: "En periodos de escasez, Uruguay deberia limitar usos productivos del agua antes que el consumo residencial.",
+        angleA: "El acceso humano al agua potable debe tener prioridad frente a la rentabilidad economica.",
+        angleB: "Cortes productivos amplios tambien pueden destruir empleo, alimentos e ingresos necesarios.",
+        editorialNote: "La gestion sostenible de acuiferos estrategicos exige discutir prioridades, extracciones y monitoreo antes de una nueva crisis.",
+        references: [
+            { label: "Ministerio de Ambiente", url: "https://www.gub.uy/ministerio-ambiente/comunicacion/noticias/mision-tecnica-internacional-para-fortalecer-gestion-sostenible-del-agua" },
+        ],
+    },
+    {
+        id: "u7", legacyIntensity: "medio", category: "educacion",
+        statement: "Las becas universitarias deberian priorizar necesidad economica aunque el rendimiento no sea sobresaliente.",
+        angleA: "La beca compensa desigualdades de origen que tambien afectan las notas.",
+        angleB: "Exigir resultados ayuda a asignar recursos escasos y reconoce el compromiso academico.",
+        editorialNote: "La Rendicion de Cuentas propuso reforzar becas como herramienta de acceso para estudiantes vulnerables.",
+        references: [
+            { label: "Presidencia — Becas universitarias", url: "https://www.gub.uy/presidencia/comunicacion/noticias/rendicion-propone-refuerzo-para-becas-universitarias-100-millones-pesos" },
+        ],
+    },
+    {
+        id: "u8", legacyIntensity: "filoso", category: "actualidad",
+        statement: "El contenido politico creado con inteligencia artificial deberia estar prohibido durante las campanas electorales.",
+        angleA: "Los deepfakes baratos pueden manipular decisiones antes de que una correccion alcance a circular.",
+        angleB: "Una prohibicion amplia tambien puede censurar satira, accesibilidad y usos informativos legitimos.",
+        editorialNote: "Iberoamerica debate como los deepfakes interactuan con polarizacion, desconfianza y debilidad informativa.",
+        references: [
+            { label: "El Pais — Democracia sintetica", url: "https://elpais.com/america/iberoamerica-democracia/2026-05-19/la-democracia-sintetica-en-iberoamerica-y-el-deepfake.html" },
+        ],
+    },
+    {
+        id: "u9", legacyIntensity: "filoso", category: "politica",
+        statement: "America Latina deberia ralentizar la extraccion de minerales criticos hasta poder procesarlos localmente.",
+        angleA: "Sin valor agregado ni garantias ambientales, la region repite una dependencia extractiva.",
+        angleB: "Demorar inversiones puede hacer perder ingresos y oportunidades en la transicion energetica.",
+        editorialNote: "La carrera global por minerales para energia, tecnologia e IA reactivo el debate regional sobre desarrollo y ambiente.",
+        references: [
+            { label: "El Pais — Minerales criticos", url: "https://elpais.com/america-futura/2026-08-11/la-carrera-por-los-minerales-y-una-mirada-de-justicia-para-america-latina.html" },
+        ],
+    },
+    {
+        id: "p1", legacyIntensity: "filoso", category: "filosofia",
+        statement: "Una inteligencia artificial que afirma sentir deberia ser tratada como posiblemente consciente.",
+        angleA: "Si conducta, memoria y relato son coherentes, negar toda experiencia podria ser un prejuicio biologico.",
+        angleB: "Imitar lenguaje sobre emociones no demuestra que exista una experiencia subjetiva.",
+        editorialNote: "El problema es filosofico: la conducta observable no permite ver directamente la experiencia subjetiva, humana o artificial.",
+        references: [
+            { label: "Stanford Encyclopedia — Conciencia y panpsiquismo", url: "https://plato.stanford.edu/archives/sum2022/entries/panpsychism/" },
+            { label: "UNESCO — Etica de la IA", url: "https://www.unesco.org/en/artificial-intelligence/recommendation-ethics" },
+        ],
+    },
+    {
+        id: "p2", legacyIntensity: "filoso", category: "filosofia",
+        statement: "Una copia perfecta de tu mente seguiria siendo vos.",
+        angleA: "Si conserva recuerdos, personalidad y continuidad psicologica, mantiene lo esencial de la identidad.",
+        angleB: "Una copia puede parecerse por completo y aun asi ser otro sujeto con su propia experiencia.",
+    },
+    {
+        id: "p3", legacyIntensity: "filoso", category: "filosofia",
+        statement: "El orden del universo hace mas razonable creer que existe Dios.",
+        angleA: "La estructura y ajuste del mundo pueden entenderse mejor como resultado de una inteligencia.",
+        angleB: "Orden aparente y complejidad pueden surgir de leyes naturales sin un diseñador.",
+        editorialNote: "La tesis traduce el argumento teleologico o de diseño y su critica naturalista; no presupone una religion concreta.",
+        references: [
+            { label: "Stanford Encyclopedia — Teologia natural", url: "https://plato.stanford.edu/entries/natural-theology/" },
+        ],
     },
 ];
 

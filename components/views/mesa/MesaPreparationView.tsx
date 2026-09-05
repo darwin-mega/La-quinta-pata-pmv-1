@@ -1,5 +1,6 @@
 import { Room } from "@/lib/store";
 import styles from "./MesaRoundLayout.module.css";
+import TopicSources from "@/components/TopicSources";
 
 export default function MesaPreparationView({ room, onStartDebate }: { room: Room, onStartDebate: () => void }) {
     const round = room.rounds[room.currentRoundIndex];
@@ -33,6 +34,8 @@ export default function MesaPreparationView({ room, onStartDebate }: { room: Roo
                     </div>
                 </div>
             </div>
+
+            {topic ? <TopicSources topic={topic} /> : null}
 
             <button onClick={onStartDebate} className={styles.primaryAction}>
                 Comenzar debate

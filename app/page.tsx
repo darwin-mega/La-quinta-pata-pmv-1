@@ -64,6 +64,9 @@ export default function Home() {
                                 <Link href="/how-to-play" className={styles.secondaryCta}>
                                     Ver como funciona
                                 </Link>
+                                <Link href="/topics" className={styles.ghostLink}>
+                                    Explorar premisas
+                                </Link>
                                 <a href="#trailer" className={styles.ghostLink}>
                                     Ver trailer
                                 </a>

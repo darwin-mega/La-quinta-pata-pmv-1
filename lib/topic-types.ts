@@ -33,6 +33,11 @@ export type TopicSource = "system" | "custom";
 export type TopicMixStrategy = "balanced";
 export type SavedTopicSource = "user" | "curated";
 
+export type TopicReference = {
+    label: string;
+    url: string;
+};
+
 export type DebateTopic = {
     id: string;
     text: string;
@@ -45,6 +50,8 @@ export type DebateTopic = {
     angleA: string;
     angleB: string;
     prompts: string[];
+    editorialNote?: string;
+    references?: TopicReference[];
     enabled?: boolean;
 };
 
