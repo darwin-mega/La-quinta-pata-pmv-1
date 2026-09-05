@@ -9,10 +9,10 @@ import { TOPIC_CATEGORY_OPTIONS, TopicIntensity } from "@/lib/topic-types";
 import styles from "./topics.module.css";
 
 const INTENSITY_LABELS: Record<TopicIntensity, string> = {
-    baja: "Baja",
-    media: "Media",
-    alta: "Alta",
-    muy_alta: "Muy alta",
+    baja: "Tranqui",
+    media: "Con picante",
+    alta: "Se pone serio",
+    muy_alta: "Sin filtro",
 };
 
 const normalize = (value: string) => value

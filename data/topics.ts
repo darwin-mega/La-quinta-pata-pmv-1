@@ -26,15 +26,37 @@ const normalizeIntensity = (topicId: string, legacyIntensity: LegacyTopicIntensi
 };
 
 const buildContext = (category: TopicCategoryId, statement: string) => {
+    if (category === "vida_cotidiana") {
+        return `Parece una pavada, pero alguien tiene que poner orden. Elegi un bando, exagera con carino y defende esta regla no escrita: "${statement}"`;
+    }
+
     const label = CATEGORY_LABELS.get(category) || category;
     return `Tema de ${label}. La sala debate una tesis clara y debe sostenerla o refutarla con ejemplos, criterios y consecuencias reales. Tesis: "${statement}"`;
 };
 
-const buildPrompts = () => [
-    "Que ejemplo concreto hace mas fuerte tu postura?",
-    "Que costo o limite ves en la postura contraria?",
-    "Que criterio usarias para convencer a alguien que no piensa como tu equipo?",
-];
+const buildPrompts = (category: TopicCategoryId, intensity: LegacyTopicIntensity) => {
+    if (category === "vida_cotidiana") {
+        return [
+            "Que anecdota absurda demuestra que tenes razon?",
+            "Que regla no escrita deberia existir desde manana?",
+            "Defende tu postura como si tu amistad dependiera de esto.",
+        ];
+    }
+
+    if (intensity === "liviano") {
+        return [
+            "Que ejemplo cotidiano te da la razon?",
+            "Donde pondrias el limite sin arruinar la diversion?",
+            "Que responderias si te dicen 'no es para tanto'?",
+        ];
+    }
+
+    return [
+        "Que ejemplo concreto hace mas fuerte tu postura?",
+        "Que costo o limite ves en la postura contraria?",
+        "Que criterio usarias para convencer a alguien que no piensa como tu equipo?",
+    ];
+};
 
 const toDebateTopic = (seed: TopicSeed): DebateTopic => ({
     id: seed.id,
@@ -47,7 +69,7 @@ const toDebateTopic = (seed: TopicSeed): DebateTopic => ({
     context: buildContext(seed.category, seed.statement),
     angleA: seed.angleA,
     angleB: seed.angleB,
-    prompts: buildPrompts(),
+    prompts: buildPrompts(seed.category, seed.legacyIntensity),
     editorialNote: seed.editorialNote,
     references: seed.references,
     enabled: true,

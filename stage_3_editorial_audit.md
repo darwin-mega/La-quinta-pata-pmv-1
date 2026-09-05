@@ -129,3 +129,14 @@ Se añadieron cinco premisas nuevas:
 - Recargo sanitario por sedentarismo voluntario.
 
 La última propuesta original fue dividida en dos porque gravar un producto y aumentar el aporte de una persona emplean mecanismos distintos y producen objeciones éticas diferentes.
+
+## Principio de diseño: dilemas disfrazados
+
+La capa liviana no elimina profundidad: la esconde dentro de una escena reconocible. Una papa tomada del plato permite discutir propiedad y confianza; dividir una cuenta abre justicia y reciprocidad; adelantarse en una serie plantea acuerdos y lealtad. La persona puede defender una intuición cotidiana sin necesitar vocabulario académico.
+
+Para sostener este tono:
+
+- Las premisas de Vida cotidiana reciben consignas sobre anécdotas, reglas no escritas y defensa exagerada de la postura.
+- El resto de los temas livianos usa preguntas conversacionales en lugar de criterios académicos.
+- Los niveles visibles pasaron de «Baja/Media/Alta/Muy alta» a «Tranqui/Con picante/Se pone serio/Sin filtro».
+- Los dilemas intensos conservan preguntas más analíticas porque allí la profundidad explícita sí es parte de la experiencia elegida.

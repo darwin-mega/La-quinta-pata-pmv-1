@@ -15,10 +15,10 @@ export const TOPIC_CATEGORY_OPTIONS = [
 ] as const;
 
 export const TOPIC_INTENSITY_OPTIONS = [
-    { id: "baja", label: "Baja" },
-    { id: "media", label: "Media" },
-    { id: "alta", label: "Alta" },
-    { id: "muy_alta", label: "Muy Alta" },
+    { id: "baja", label: "Tranqui" },
+    { id: "media", label: "Con picante" },
+    { id: "alta", label: "Se pone serio" },
+    { id: "muy_alta", label: "Sin filtro" },
 ] as const;
 
 export const TOPIC_MODE_OPTIONS = [
