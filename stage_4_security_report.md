@@ -67,3 +67,13 @@ npm run lint
 npm run build
 npm audit
 ```
+
+## Verificación en producción
+
+- Sala `DONO` creada desde la interfaz pública por el host.
+- Lectura anónima del estado: HTTP 401.
+- Segundo jugador incorporado: HTTP 200 y cookie firmada recibida.
+- Lectura autenticada: HTTP 200, dos jugadores y `persistenceMode=redis`.
+- El lobby del host recibió al segundo jugador con el sondeo reducido.
+- Inicio de partida autorizado y transición correcta a preparación.
+- La ronda mostró premisa, posturas y disparadores sin errores visibles.
