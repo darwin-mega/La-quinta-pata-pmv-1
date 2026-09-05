@@ -11,6 +11,7 @@ export const TOPIC_CATEGORY_OPTIONS = [
     { id: "trabajo", label: "Trabajo" },
     { id: "educacion", label: "Educación" },
     { id: "actualidad", label: "Actualidad" },
+    { id: "vida_cotidiana", label: "Vida cotidiana" },
 ] as const;
 
 export const TOPIC_INTENSITY_OPTIONS = [

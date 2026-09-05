@@ -5,7 +5,7 @@ Fecha: 5 de septiembre de 2026
 ## Resultado ejecutivo
 
 - Catálogo final auditado: **20 falacias**, con 20 nombres técnicos, 20 nombres cotidianos y 20 mecanismos conceptuales únicos.
-- Banco final: **96 premisas con texto e identificador únicos**.
+- Banco final: **120 premisas con texto e identificador únicos**.
 - Se reemplazó `Non sequitur` porque era una categoría demasiado amplia y podía superponerse con otros errores. En su lugar se incorporó **Afirmación del consecuente**.
 - Se reescribieron 13 premisas cercanas a otras ya existentes.
 - Se agregaron 12 premisas nuevas: nueve vinculadas con Uruguay o América Latina y tres filosóficas.
@@ -103,3 +103,11 @@ Las fuentes aportan el hecho o contexto que origina el debate. No se presentan c
 - La interfaz aclara expresamente que la fuente no decide qué postura gana.
 - La estructura es opcional, por lo que las premisas clásicas siguen funcionando sin cambios.
 - Se agregó `/topics`, un explorador público con búsqueda, filtro por categoría, intensidad, posturas y fuentes.
+
+## Capa liviana: Vida cotidiana
+
+Se incorporó una categoría específica con 24 premisas originales. La referencia de tono fue el formato de party games de debate y persuasión —rapidez, creatividad y humor—, sin copiar cartas ni textos comerciales.
+
+Los temas incorporados son: audios largos, el significado de «ya salgo», sacar papas del plato, dividir la cuenta, quién elige la música, la última porción, spoilers, llamadas sin aviso, emojis como respuesta, impuntualidad, trabajar en pijama, mascotas en la cama, guardar lugar en filas, cajas rápidas, aire acondicionado, cantar el cumpleaños, adelantarse en una serie, devolver un tupper, prestar dinero, compartir contraseñas, opinar sobre un corte de pelo, cancelar por cansancio, organizar viajes y ofrecer alternativas vegetarianas en un asado.
+
+Cada planteo usa una situación reconocible y potencialmente graciosa para abrir una discusión real sobre reciprocidad, consentimiento, convivencia, honestidad, justicia o cuidado.

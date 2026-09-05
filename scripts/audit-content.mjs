@@ -8,7 +8,7 @@ const [topicsSource, fallaciesSource] = await Promise.all([
 const collect = (source, pattern) => [...source.matchAll(pattern)].map(match => match[1].trim());
 const normalize = value => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
-const topicIds = collect(topicsSource, /^\s+id: "([lmfup]\d+)"/gm);
+const topicIds = collect(topicsSource, /^\s+id: "([a-z]+\d+)"/gm);
 const statements = collect(topicsSource, /^\s+statement: "([^"]+)"/gm);
 const fallacyIds = collect(fallaciesSource, /^\s+id: "(f\d+)"/gm);
 const fallacyNames = collect(fallaciesSource, /^\s+name: "([^"]+)"/gm);
