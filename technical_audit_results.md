@@ -15,15 +15,18 @@ hasta el resultado de una ronda.
 
 ## Diagnóstico del despliegue de Vercel
 
-El dominio `la-quinta-pata-pmv-1.vercel.app` sirve correctamente la portada y
-permite crear una sala, pero el estado de esa sala devuelve HTTP 503. El problema
-fue reproducido en doce solicitudes consecutivas.
+El dominio `la-quinta-pata-pmv-1.vercel.app` está operativo. La falla HTTP 503
+tenía dos capas: el código desplegado hacía doble serialización de las salas y el
+proyecto seguía apuntando a la base Upstash `la-quinta-pata` (`cool-hamster`), que
+había sido eliminada por inactividad. Los logs confirmaron el fallo de DNS
+`ENOTFOUND cool-hamster-87881.upstash.io`.
 
-La causa es la doble serialización en Redis: la versión desplegada entrega a
-Upstash un `JSON.stringify(room)` aunque el cliente ya serializa el valor. Al
-leerlo se obtiene una cadena, no un objeto `Room`, y el intento posterior de
-guardarlo vuelve a fallar. La corrección guarda objetos directamente y también
-puede leer las salas antiguas doblemente serializadas durante la transición.
+La corrección guarda objetos directamente y conserva compatibilidad de lectura
+con salas antiguas doblemente serializadas. En Vercel se retiró únicamente la
+conexión obsoleta de La Quinta Pata y se conectó la base activa Free Tier
+`juicio-publico-multi` (`cheerful-cougar`). La conexión de Juicio no fue alterada.
+Ambos juegos comparten infraestructura gratuita, pero La Quinta Pata aísla todas
+sus claves con los prefijos `lqp:` y `lqp:lock:`.
 
 El código de La Quinta Pata no importa ni utiliza Supabase. Sin embargo, los logs
 del proyecto Supabase `darwin-mega's Project` muestran un flujo OAuth de Juicio
@@ -59,16 +62,17 @@ de redirección, pero no es la causa del HTTP 503 de las salas.
   jugador, selección automática de tema, inicio y cierre de debate, dos votos y
   generación de ganador.
 
-## Requisitos para publicarlo hoy
+## Estado operativo y próximos pasos
 
-1. Crear una base Redis en Upstash o Vercel Marketplace.
-2. Configurar `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
-3. Configurar `LA_QUINTA_PATA_SESSION_SECRET` con un valor aleatorio largo.
-4. Desplegar el commit validado y ejecutar una partida de prueba desde dos
-   teléfonos distintos.
+La salida a producción quedó completada: Vercel usa Redis persistente, el commit
+validado fue redesplegado con la configuración actual y una prueba remota de dos
+sesiones llegó desde la creación de sala hasta el resultado final. La API informó
+explícitamente `persistenceMode: redis`.
 
-Sin Redis, el desarrollo local funciona, pero las salas se guardan en memoria y
-pueden perderse o divergir cuando una plataforma serverless usa varias instancias.
+Como control operativo conviene jugar una ronda desde dos teléfonos reales y
+vigilar durante los primeros días el consumo del Free Tier. Si el uso crece, el
+primer ajuste debe ser reducir el sondeo de estado antes de ampliar o pagar
+infraestructura.
 
 ## Riesgos y oportunidades priorizadas
 
