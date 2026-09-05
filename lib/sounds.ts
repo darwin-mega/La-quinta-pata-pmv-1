@@ -10,15 +10,19 @@ let musicGain: GainNode | null = null;
 let fxGain: GainNode | null = null;
 let ambienceCleanup: (() => void) | null = null;
 let ambiencePulseTimer: number | null = null;
+let ambienceDuckTimer: number | null = null;
 let cachedPreference: boolean | null = null;
 
-type SoundAssetKey = "ambience" | "button" | "phase" | "tick" | "timeout" | "turn" | "fallacy" | "victory";
+type SoundAssetKey = "ambience" | "button" | "buttonSoft" | "buttonBright" | "phase" | "tick" | "tickAlt" | "timeout" | "turn" | "fallacy" | "victory";
 
 const soundAssetPaths: Record<SoundAssetKey, string> = {
     ambience: "/audio/ambience-loop.wav",
     button: "/audio/button.wav",
+    buttonSoft: "/audio/button-soft.wav",
+    buttonBright: "/audio/button-bright.wav",
     phase: "/audio/phase-change.wav",
     tick: "/audio/tick.wav",
+    tickAlt: "/audio/tick-alt.wav",
     timeout: "/audio/timeout.wav",
     turn: "/audio/turn.wav",
     fallacy: "/audio/fallacy.wav",
@@ -26,14 +30,17 @@ const soundAssetPaths: Record<SoundAssetKey, string> = {
 };
 
 const soundAssetVolumes: Record<SoundAssetKey, number> = {
-    ambience: 0.34,
-    button: 0.52,
-    phase: 0.55,
-    tick: 0.4,
-    timeout: 0.52,
-    turn: 0.65,
-    fallacy: 0.68,
-    victory: 0.72,
+    ambience: 0.2,
+    button: 0.38,
+    buttonSoft: 0.34,
+    buttonBright: 0.36,
+    phase: 0.48,
+    tick: 0.3,
+    tickAlt: 0.3,
+    timeout: 0.55,
+    turn: 0.58,
+    fallacy: 0.6,
+    victory: 0.62,
 };
 
 const audioCache = new Map<SoundAssetKey, HTMLAudioElement>();
@@ -74,6 +81,35 @@ function playRecordedSound(key: Exclude<SoundAssetKey, "ambience">) {
     instance.currentTime = 0;
     void instance.play().catch(() => undefined);
     return true;
+}
+
+function duckBackground(durationMs: number, factor = 0.4) {
+    if (typeof window === "undefined" || !getStoredPreference()) return;
+
+    const ambienceAudio = getSoundAsset("ambience");
+    if (ambienceAudio && !ambienceAudio.paused) {
+        ambienceAudio.volume = soundAssetVolumes.ambience * factor;
+    }
+
+    if (audioCtx && musicGain) {
+        const now = audioCtx.currentTime;
+        musicGain.gain.cancelScheduledValues(now);
+        musicGain.gain.setTargetAtTime(0.3 * factor, now, 0.035);
+    }
+
+    if (ambienceDuckTimer !== null) {
+        window.clearTimeout(ambienceDuckTimer);
+    }
+
+    ambienceDuckTimer = window.setTimeout(() => {
+        if (ambienceAudio && getStoredPreference()) {
+            ambienceAudio.volume = soundAssetVolumes.ambience;
+        }
+        if (audioCtx && musicGain) {
+            musicGain.gain.setTargetAtTime(0.3, audioCtx.currentTime, 0.12);
+        }
+        ambienceDuckTimer = null;
+    }, durationMs);
 }
 
 function getStoredPreference() {
@@ -145,7 +181,8 @@ export function unlockAudio() {
     const ready = initAudio();
 
     if (canUseHtmlAudio()) {
-        (Object.keys(soundAssetPaths) as SoundAssetKey[]).forEach(key => {
+        const immediateSounds: SoundAssetKey[] = ["button", "buttonSoft", "buttonBright", "phase"];
+        immediateSounds.forEach(key => {
             const asset = getSoundAsset(key);
             asset?.load();
         });
@@ -301,6 +338,16 @@ export function stopBackgroundMusic() {
         ambiencePulseTimer = null;
     }
 
+    if (typeof window !== "undefined" && ambienceDuckTimer !== null) {
+        window.clearTimeout(ambienceDuckTimer);
+        ambienceDuckTimer = null;
+    }
+
+    if (audioCtx && musicGain) {
+        musicGain.gain.cancelScheduledValues(audioCtx.currentTime);
+        musicGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    }
+
     if (ambienceCleanup) {
         ambienceCleanup();
         ambienceCleanup = null;
@@ -310,6 +357,7 @@ export function stopBackgroundMusic() {
 // Sonido de inicio de turno (llamada de atención dramática)
 export function playTurnSound() {
     vibrate([70, 35, 90]);
+    duckBackground(1250, 0.28);
     if (playRecordedSound("turn")) return;
 
     withFx((ctx, output) => {
@@ -334,6 +382,7 @@ export function playTurnSound() {
 // Sonido de falacia señalada (alerta / tensión)
 export function playFallacySound() {
     vibrate([110, 55, 110]);
+    duckBackground(1100, 0.24);
     if (playRecordedSound("fallacy")) return;
 
     withFx((ctx, output) => {
@@ -365,7 +414,8 @@ export function playFallacySound() {
 
 // Sonido de tiempo agotándose (tic ansioso)
 export function playTickSound() {
-    if (playRecordedSound("tick")) return;
+    const tick = Math.random() > 0.5 ? "tick" : "tickAlt";
+    if (playRecordedSound(tick)) return;
 
     withFx((ctx, output) => {
         const now = ctx.currentTime;
@@ -389,6 +439,7 @@ export function playTickSound() {
 // Golpe final cuando el tiempo llega a cero
 export function playTimeoutSound() {
     vibrate(180);
+    duckBackground(1150, 0.22);
     if (playRecordedSound("timeout")) return;
 
     withFx((ctx, output) => {
@@ -418,6 +469,7 @@ export function playTimeoutSound() {
 // Sonido de resultado / victoria (cortina de resolución)
 export function playWinSound() {
     vibrate([60, 40, 60, 40, 150]);
+    duckBackground(3400, 0.18);
     if (playRecordedSound("victory")) return;
 
     withFx((ctx, output) => {
@@ -445,7 +497,9 @@ export function playWinSound() {
 // Sonido sutil de botón
 export function playButtonSound() {
     vibrate(12);
-    if (playRecordedSound("button")) return;
+    const variants = ["button", "buttonSoft", "buttonBright"] as const;
+    const variant = variants[Math.floor(Math.random() * variants.length)];
+    if (playRecordedSound(variant)) return;
 
     withFx((ctx, output) => {
         const now = ctx.currentTime;
@@ -469,6 +523,7 @@ export function playButtonSound() {
 // Sonido de cambio de interfaz / transición de fase
 export function playPhaseChangeSound() {
     vibrate(35);
+    duckBackground(850, 0.38);
     if (playRecordedSound("phase")) return;
 
     withFx((ctx, output) => {

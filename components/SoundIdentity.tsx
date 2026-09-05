@@ -59,6 +59,19 @@ export default function SoundIdentity() {
         return () => document.removeEventListener("click", handleDocumentClick, true);
     }, []);
 
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "hidden") {
+                stopBackgroundMusic();
+            } else if (enabled) {
+                startBackgroundMusic();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, [enabled]);
+
     const handleToggle = () => {
         const nextValue = !enabled;
         setEnabled(nextValue);
@@ -68,7 +81,6 @@ export default function SoundIdentity() {
             unlockAudio();
             startBackgroundMusic();
             playPhaseChangeSound();
-            playButtonSound();
             setReady(true);
         } else {
             stopBackgroundMusic();
