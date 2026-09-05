@@ -3,6 +3,7 @@ import { GameDuration, GameIntensity, TopicSelectionMode, createRoom, generatePl
 import { setRoomSessionCookie } from "@/lib/session";
 import { buildTopicConfigFromGameIntensity, normalizeTopicConfigInput, validateTopicConfig } from "@/lib/topic-engine";
 import { MAX_HOST_NAME_LENGTH, MAX_PLAYER_NAME_LENGTH, MAX_ROOM_NAME_LENGTH } from "@/lib/topic-types";
+import { checkRateLimit, getRequestFingerprint, rateLimitResponse } from "@/lib/rate-limit";
 
 const VALID_DURATIONS = new Set(["corta", "larga", "leyenda"]);
 const VALID_MODES = new Set(["multiplayer", "individual", "mesa"]);
@@ -18,6 +19,11 @@ const getDefaultRoomName = (mode: Room["mode"]) => {
 
 export async function POST(req: Request) {
     try {
+        const rateLimit = await checkRateLimit("create-room", getRequestFingerprint(req), 12, 600);
+        if (!rateLimit.allowed) {
+            return rateLimitResponse(rateLimit, "Demasiadas salas creadas. Espera unos minutos antes de intentar otra vez.");
+        }
+
         const body = await req.json();
         const {
             name,

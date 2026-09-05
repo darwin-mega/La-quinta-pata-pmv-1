@@ -10,6 +10,7 @@ import {
 } from "@/lib/store";
 import { hasGameEnded, isTwoPlayerRoom } from "@/lib/game";
 import { readRoomSession, RoomSession } from "@/lib/session";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import {
     createDebateTopicFromSavedTopic,
     createSavedTopic,
@@ -41,6 +42,11 @@ export async function POST(req: Request, props: { params: Promise<{ roomId: stri
 
         if (!session) {
             return NextResponse.json({ error: "Sesion invalida o expirada" }, { status: 401 });
+        }
+
+        const rateLimit = await checkRateLimit("room-action", `${roomId}:${session.playerId}`, 180, 60);
+        if (!rateLimit.allowed) {
+            return rateLimitResponse(rateLimit, "Estas enviando acciones demasiado rapido. Espera un momento.");
         }
 
         const body = await req.json();

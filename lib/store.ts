@@ -223,7 +223,7 @@ const acquireRedisRoomLock = async (id: string) => {
     const token = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
     for (let attempt = 0; attempt < 40; attempt++) {
-        const acquired = await redis.set(ROOM_LOCK_KEY(key), token, { nx: true, ex: 5 });
+        const acquired = await redis.set(ROOM_LOCK_KEY(key), token, { nx: true, ex: 10 });
         if (acquired) return token;
         await sleep(50);
     }
@@ -237,10 +237,11 @@ const releaseRedisRoomLock = async (id: string, token: string | null) => {
     const key = id.toUpperCase();
 
     try {
-        const currentToken = await redis.get<string>(ROOM_LOCK_KEY(key));
-        if (currentToken === token) {
-            await redis.del(ROOM_LOCK_KEY(key));
-        }
+        await redis.eval(
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+            [ROOM_LOCK_KEY(key)],
+            [token],
+        );
     } catch (err) {
         console.error("[Redis] releaseRoomLock error:", err);
     }

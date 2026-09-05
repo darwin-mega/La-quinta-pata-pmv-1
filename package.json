@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "audio:generate": "node scripts/generate-audio.mjs",
-    "content:audit": "node scripts/audit-content.mjs"
+    "content:audit": "node scripts/audit-content.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@upstash/redis": "^1.38.4",
@@ -29,6 +30,7 @@
     "@types/react-dom": "^19.2.7",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.6"
   }
 }

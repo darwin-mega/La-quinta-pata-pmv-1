@@ -21,15 +21,17 @@ export default function MesaPage() {
     const [room, setRoom] = useState<Room | null>(null);
     const [loading, setLoading] = useState(true);
     const [connectionError, setConnectionError] = useState(false);
+    const [accessDenied, setAccessDenied] = useState(false);
     const consecutiveErrors = useRef(0);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const autoStartTriggeredRef = useRef(false);
 
     const fetchState = useCallback(async () => {
-        if (abortControllerRef.current) abortControllerRef.current.abort();
-        abortControllerRef.current = new AbortController();
-        const signal = abortControllerRef.current.signal;
+        if (abortControllerRef.current) return;
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        const signal = controller.signal;
 
         try {
             const res = await fetch(`/api/room/${roomId}/state`, {
@@ -41,7 +43,11 @@ export default function MesaPage() {
                 const data = await res.json();
                 setRoom(data.room);
                 setConnectionError(false);
+                setAccessDenied(false);
                 consecutiveErrors.current = 0;
+            } else if (res.status === 401) {
+                setRoom(null);
+                setAccessDenied(true);
             } else if (res.status === 404) {
                 consecutiveErrors.current += 1;
                 if (consecutiveErrors.current >= 5) setConnectionError(true);
@@ -51,13 +57,18 @@ export default function MesaPage() {
             consecutiveErrors.current += 1;
             if (consecutiveErrors.current >= 6) setConnectionError(true);
         } finally {
+            if (abortControllerRef.current === controller) abortControllerRef.current = null;
             setLoading(false);
         }
     }, [roomId]);
 
+    const pollIntervalMs = room?.state === "debate" ? 1000 : 2500;
+
     useEffect(() => {
         fetchState();
-        intervalRef.current = setInterval(() => fetchState(), 1000);
+        intervalRef.current = setInterval(() => {
+            if (document.visibilityState === "visible") fetchState();
+        }, pollIntervalMs);
 
         const handleVisibility = () => {
             if (document.visibilityState === "visible") fetchState();
@@ -73,7 +84,7 @@ export default function MesaPage() {
             window.removeEventListener("visibilitychange", handleVisibility);
             window.removeEventListener("focus", handleFocus);
         };
-    }, [fetchState]);
+    }, [fetchState, pollIntervalMs]);
 
     useEffect(() => {
         if (room?.state && room.state !== "lobby") {
@@ -128,6 +139,19 @@ export default function MesaPage() {
                 <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "3px solid #3b82f6", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
                 <span style={{ color: "var(--text-secondary)" }}>Conectando al tablero de mesa...</span>
                 <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+        );
+    }
+
+    if (accessDenied) {
+        return (
+            <div className="page-container" style={{ justifyContent: "center", alignItems: "center", flexDirection: "column", gap: "1.5rem", textAlign: "center" }}>
+                <div style={{ fontSize: "3rem" }}>🔐</div>
+                <h2 style={{ color: "white" }}>Este tablero está protegido</h2>
+                <p style={{ color: "var(--text-secondary)", maxWidth: "320px" }}>Abrilo desde el mismo dispositivo que creó la mesa.</p>
+                <button onClick={() => router.push("/")} style={{ padding: "1rem 2rem", background: "var(--accent-color)", color: "white", border: "none", borderRadius: "var(--radius-md)", fontWeight: 700, cursor: "pointer" }}>
+                    Volver al inicio
+                </button>
             </div>
         );
     }

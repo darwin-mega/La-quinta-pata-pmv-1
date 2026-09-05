@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generatePlayerId, mutateRoom } from "@/lib/store";
 import { setRoomSessionCookie } from "@/lib/session";
 import { MAX_PLAYER_NAME_LENGTH } from "@/lib/topic-types";
+import { checkRateLimit, getRequestFingerprint, rateLimitResponse } from "@/lib/rate-limit";
 
 class JoinError extends Error {
     status: number;
@@ -19,6 +20,11 @@ export async function POST(req: Request, props: { params: Promise<{ roomId: stri
     const params = await props.params;
     try {
         const roomId = params.roomId.toUpperCase();
+        const rateLimit = await checkRateLimit("join-room", `${getRequestFingerprint(req)}:${roomId}`, 30, 600);
+        if (!rateLimit.allowed) {
+            return rateLimitResponse(rateLimit, "Demasiados intentos de ingreso. Espera unos minutos antes de volver a intentar.");
+        }
+
         const body = await req.json();
         const playerName = typeof body?.playerName === "string" ? body.playerName.trim() : "";
 

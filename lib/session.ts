@@ -10,6 +10,7 @@ export type RoomSession = {
 };
 
 const COOKIE_MAX_AGE_SEC = 60 * 60 * 4;
+const CLOCK_SKEW_MS = 60 * 1000;
 const configuredSessionSecret = (
     process.env.LA_QUINTA_PATA_SESSION_SECRET ||
     process.env.LA_JAULA_SESSION_SECRET ||
@@ -77,7 +78,14 @@ export const readRoomSession = (req: Request, roomId: string): RoomSession | nul
 
     try {
         const parsed = JSON.parse(fromBase64Url(encodedPayload)) as RoomSession;
-        if (parsed.version !== 1 || parsed.roomId !== roomId.toUpperCase()) {
+        const sessionAgeMs = Date.now() - parsed.issuedAt;
+        if (
+            parsed.version !== 1 ||
+            parsed.roomId !== roomId.toUpperCase() ||
+            typeof parsed.issuedAt !== "number" ||
+            sessionAgeMs > COOKIE_MAX_AGE_SEC * 1000 ||
+            sessionAgeMs < -CLOCK_SKEW_MS
+        ) {
             return null;
         }
         return parsed;

@@ -23,6 +23,7 @@ export default function RoomPage() {
     const [isHost, setIsHost] = useState(false);
     const [loading, setLoading] = useState(true);
     const [connectionError, setConnectionError] = useState(false);
+    const [accessDenied, setAccessDenied] = useState(false);
     const consecutiveErrors = useRef(0);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -37,9 +38,11 @@ export default function RoomPage() {
     }, [roomId]);
 
     const fetchState = useCallback(async (isManual = false) => {
+        if (abortControllerRef.current && !isManual) return;
         if (abortControllerRef.current) abortControllerRef.current.abort();
-        abortControllerRef.current = new AbortController();
-        const signal = abortControllerRef.current.signal;
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        const signal = controller.signal;
 
         try {
             const res = await fetch(`/api/room/${roomId}/state`, {
@@ -54,7 +57,11 @@ export default function RoomPage() {
                     setPersistenceMode(data.persistenceMode);
                 }
                 setConnectionError(false);
+                setAccessDenied(false);
                 consecutiveErrors.current = 0;
+            } else if (res.status === 401) {
+                setRoom(null);
+                setAccessDenied(true);
             } else if (res.status === 404) {
                 consecutiveErrors.current += 1;
                 if (consecutiveErrors.current >= 5) setConnectionError(true);
@@ -64,13 +71,18 @@ export default function RoomPage() {
             consecutiveErrors.current += 1;
             if (consecutiveErrors.current >= 6) setConnectionError(true);
         } finally {
+            if (abortControllerRef.current === controller) abortControllerRef.current = null;
             setLoading(false);
         }
     }, [roomId]);
 
+    const pollIntervalMs = room?.state === "debate" ? 1000 : 2500;
+
     useEffect(() => {
         fetchState();
-        intervalRef.current = setInterval(() => fetchState(), 1000);
+        intervalRef.current = setInterval(() => {
+            if (document.visibilityState === "visible") fetchState();
+        }, pollIntervalMs);
 
         const handleVisibility = () => {
             if (document.visibilityState === "visible") fetchState(true);
@@ -86,7 +98,7 @@ export default function RoomPage() {
             window.removeEventListener("visibilitychange", handleVisibility);
             window.removeEventListener("focus", handleFocus);
         };
-    }, [fetchState]);
+    }, [fetchState, pollIntervalMs]);
 
     useEffect(() => {
         if (room?.state && room.state !== "lobby" && room.state !== "results") {
@@ -132,6 +144,19 @@ export default function RoomPage() {
                 <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "3px solid var(--accent-color)", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
                 <span style={{ color: "var(--text-secondary)" }}>Conectando a la sala...</span>
                 <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+        );
+    }
+
+    if (accessDenied) {
+        return (
+            <div className="page-container" style={{ justifyContent: "center", alignItems: "center", flexDirection: "column", gap: "1.5rem", textAlign: "center" }}>
+                <div style={{ fontSize: "3rem" }}>🔐</div>
+                <h2 style={{ color: "white" }}>Primero tenés que entrar a la sala</h2>
+                <p style={{ color: "var(--text-secondary)", maxWidth: "320px" }}>La partida está protegida para que solamente sus participantes puedan verla.</p>
+                <button onClick={() => router.push(`/join/${roomId}`)} style={{ padding: "1rem 2rem", background: "var(--accent-color)", color: "white", border: "none", borderRadius: "var(--radius-md)", fontWeight: 700, cursor: "pointer" }}>
+                    Entrar a la sala
+                </button>
             </div>
         );
     }
