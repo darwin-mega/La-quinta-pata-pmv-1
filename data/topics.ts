@@ -181,9 +181,9 @@ const rawTopics: TopicSeed[] = [
         id: "m1",
         legacyIntensity: "medio",
         category: "sociedad",
-        statement: "Cancelar a alguien por lo que dijo hace mas mal que bien.",
-        angleA: "La cancelacion empeora el debate y castiga mas de lo que corrige.",
-        angleB: "A veces es una respuesta necesaria frente a danos publicos reales.",
+        statement: "La cancelacion publica puede ser una forma legitima de justicia cuando las instituciones no responden.",
+        angleA: "La presion colectiva puede hacer visibles danos que el poder, la ley o una organizacion decidieron ignorar.",
+        angleB: "Sin pruebas claras, defensa ni proporcionalidad, la sancion social puede convertirse en linchamiento digital.",
     },
     {
         id: "m2",
@@ -284,9 +284,9 @@ const rawTopics: TopicSeed[] = [
 
     {
         id: "m14", legacyIntensity: "medio", category: "sociedad",
-        statement: "La meritocracia describe peor la realidad de lo que ayuda a motivar.",
-        angleA: "Oculta el peso del origen, los contactos y las oportunidades desiguales.",
-        angleB: "Aunque sea imperfecta, reconocer esfuerzo y decisiones sigue siendo motivador.",
+        statement: "El exito economico depende tanto del origen, los contactos y el azar que llamarlo meritocracia engana.",
+        angleA: "El punto de partida y las oportunidades disponibles pesan demasiado para atribuir el resultado al merito individual.",
+        angleB: "Las condiciones importan, pero el esfuerzo, las decisiones y la constancia siguen cambiando trayectorias reales.",
     },
     {
         id: "m15", legacyIntensity: "medio", category: "filosofia",
@@ -699,9 +699,9 @@ const rawTopics: TopicSeed[] = [
     },
     {
         id: "f52", legacyIntensity: "filoso", category: "politica",
-        statement: "Las carceles deberian reemplazarse en gran parte por sistemas de reparacion y reinsercion.",
-        angleA: "El encierro suele reproducir violencia sin reparar a victimas ni reducir reincidencia.",
-        angleB: "Hay danos y riesgos que requieren separacion, castigo y proteccion efectiva.",
+        statement: "Incluso ante delitos violentos, el sistema penal deberia priorizar la reinsercion sobre el castigo.",
+        angleA: "Reducir reincidencia y reconstruir capacidades protege mejor a la sociedad que administrar sufrimiento como respuesta.",
+        angleB: "La gravedad del dano puede exigir retribucion, aislamiento prolongado y prioridad para la seguridad de las victimas.",
     },
     {
         id: "u1", legacyIntensity: "filoso", category: "actualidad",
@@ -966,6 +966,37 @@ const rawTopics: TopicSeed[] = [
         statement: "En un asado, la persona vegetariana no deberia tener que llevar su propia comida.",
         angleA: "Invitar implica incluir de verdad y prever algo digno para quienes comen diferente.",
         angleB: "Llevar una opcion propia simplifica la reunion y evita imponer trabajo especial al anfitrion.",
+    },
+    // --- NUEVOS DILEMAS SOCIALES PROPUESTOS ---
+    {
+        id: "r1", legacyIntensity: "filoso", category: "relaciones",
+        statement: "Ocultar ahorros, ingresos o deudas importantes a una pareja estable puede ser tan destructivo como una infidelidad sexual.",
+        angleA: "Ambas conductas rompen acuerdos de confianza y pueden alterar decisiones centrales de una vida compartida.",
+        angleB: "El dano economico y el sexual afectan dimensiones distintas, y equipararlos borra acuerdos y circunstancias particulares.",
+    },
+    {
+        id: "r2", legacyIntensity: "filoso", category: "cultura_pop",
+        statement: "Ningun tema deberia quedar fuera del humor si el contexto de la broma es claramente satirico.",
+        angleA: "La comedia necesita libertad para incomodar, procesar tragedias y desafiar aquello que una sociedad considera intocable.",
+        angleB: "El contexto satirico no elimina el dano cuando el chiste degrada a personas vulnerables o convierte su sufrimiento en recurso.",
+    },
+    {
+        id: "r3", legacyIntensity: "medio", category: "educacion",
+        statement: "La secundaria deberia quitar espacio a contenidos abstractos para ensenar finanzas, contratos y salud mental practica.",
+        angleA: "La escuela debe preparar para decisiones adultas inevitables que hoy muchas personas enfrentan sin herramientas basicas.",
+        angleB: "La formacion abstracta ensena a pensar y comprender cultura; reducirla a utilidad inmediata empobrece la educacion.",
+    },
+    {
+        id: "r4", legacyIntensity: "filoso", category: "politica",
+        statement: "Los alimentos ultraprocesados deberian pagar un impuesto extra para financiar la salud publica.",
+        angleA: "El precio puede reflejar costos sanitarios colectivos y desalentar productos disenados para un consumo danino.",
+        angleB: "El impuesto castiga mas a quienes tienen menos opciones y simplifica problemas de alimentacion, tiempo e ingresos.",
+    },
+    {
+        id: "r5", legacyIntensity: "filoso", category: "etica",
+        statement: "Quien elige una vida sedentaria deberia aportar mas al sistema de salud que quien cumple una actividad fisica minima.",
+        angleA: "Si una conducta voluntaria eleva costos previsibles, una contribucion mayor puede parecer responsabilidad y no castigo.",
+        angleB: "Medir, vigilar y penalizar cuerpos ignora enfermedad, discapacidad, trabajo y desigualdad, ademas de romper la solidaridad sanitaria.",
     },
 ];
 

@@ -5,7 +5,7 @@ Fecha: 5 de septiembre de 2026
 ## Resultado ejecutivo
 
 - Catálogo final auditado: **20 falacias**, con 20 nombres técnicos, 20 nombres cotidianos y 20 mecanismos conceptuales únicos.
-- Banco final: **120 premisas con texto e identificador únicos**.
+- Banco final: **125 premisas con texto e identificador únicos**.
 - Se reemplazó `Non sequitur` porque era una categoría demasiado amplia y podía superponerse con otros errores. En su lugar se incorporó **Afirmación del consecuente**.
 - Se reescribieron 13 premisas cercanas a otras ya existentes.
 - Se agregaron 12 premisas nuevas: nueve vinculadas con Uruguay o América Latina y tres filosóficas.
@@ -111,3 +111,21 @@ Se incorporó una categoría específica con 24 premisas originales. La referenc
 Los temas incorporados son: audios largos, el significado de «ya salgo», sacar papas del plato, dividir la cuenta, quién elige la música, la última porción, spoilers, llamadas sin aviso, emojis como respuesta, impuntualidad, trabajar en pijama, mascotas en la cama, guardar lugar en filas, cajas rápidas, aire acondicionado, cantar el cumpleaños, adelantarse en una serie, devolver un tupper, prestar dinero, compartir contraseñas, opinar sobre un corte de pelo, cancelar por cansancio, organizar viajes y ofrecer alternativas vegetarianas en un asado.
 
 Cada planteo usa una situación reconocible y potencialmente graciosa para abrir una discusión real sobre reciprocidad, consentimiento, convivencia, honestidad, justicia o cuidado.
+
+## Nuevos dilemas incorporados
+
+Se revisaron siete propuestas adicionales. Tres ya estaban representadas conceptualmente y fueron profundizadas sin crear duplicados:
+
+- Cancelación pública: justicia ante vacíos institucionales frente a linchamiento sin debido proceso.
+- Reinserción penal: prioridad de rehabilitación incluso ante delitos violentos frente a retribución y aislamiento.
+- Meritocracia: peso del origen, contactos y azar frente a esfuerzo, decisiones y constancia.
+
+Se añadieron cinco premisas nuevas:
+
+- Infidelidad financiera en relaciones estables.
+- Límites de la sátira ante tragedias y colectivos vulnerables.
+- Educación financiera, contractual y emocional frente a formación abstracta.
+- Impuesto sanitario a alimentos ultraprocesados.
+- Recargo sanitario por sedentarismo voluntario.
+
+La última propuesta original fue dividida en dos porque gravar un producto y aumentar el aporte de una persona emplean mecanismos distintos y producen objeciones éticas diferentes.
