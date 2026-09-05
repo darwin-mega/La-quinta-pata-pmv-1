@@ -190,7 +190,7 @@ writeStereoWav("timeout.wav", timeout, 0.8);
 const turn = createBuffer(1.24);
 addTone(turn, { duration: 0.34, frequency: midi(38), endFrequency: midi(35), gain: 0.28, attack: 0.006, release: 0.28, harmonics: [1, 0.25] });
 addNoise(turn, { duration: 0.12, gain: 0.22, attack: 0.002, release: 0.1, color: 0.15, seed: 8111 });
-[62, 65, 69].forEach((note, index) => {
+[62, 66, 69].forEach((note, index) => {
   addTone(turn, { start: 0.1 + index * 0.13, duration: 0.72, frequency: midi(note), gain: 0.17, attack: 0.025, release: 0.48, pan: [-0.4, 0.05, 0.4][index], harmonics: [1, 0.42, 0.18, 0.08], vibrato: 0.002, vibratoRate: 5.2 });
 });
 addTone(turn, { start: 0.48, duration: 0.62, frequency: midi(74), gain: 0.12, attack: 0.018, release: 0.5, pan: 0.2, harmonics: [1, 0.22] });
@@ -210,7 +210,7 @@ writeStereoWav("fallacy.wav", fallacy, 0.76);
 const victory = createBuffer(3.35);
 addTone(victory, { duration: 0.5, frequency: midi(38), endFrequency: midi(36), gain: 0.22, attack: 0.008, release: 0.42, harmonics: [1, 0.28] });
 addNoise(victory, { duration: 0.18, gain: 0.19, attack: 0.004, release: 0.15, color: 0.17, seed: 10301 });
-[62, 65, 69, 74].forEach((note, index) => {
+[62, 66, 69, 74].forEach((note, index) => {
   addTone(victory, { start: 0.08 + index * 0.17, duration: 1.05, frequency: midi(note), gain: 0.14, attack: 0.025, release: 0.68, pan: [-0.45, -0.12, 0.16, 0.45][index], harmonics: [1, 0.4, 0.17, 0.07] });
 });
 [62, 66, 69, 74].forEach((note, index) => {
@@ -226,10 +226,10 @@ writeStereoWav("victory.wav", victory, 0.82);
 const ambienceDuration = 16;
 const ambience = createBuffer(ambienceDuration);
 const chords = [
-  [50, 57, 62, 65],
-  [46, 53, 58, 62],
-  [53, 60, 65, 69],
-  [48, 55, 60, 64],
+  [50, 57, 62, 66], // D major
+  [45, 52, 57, 61], // A major
+  [47, 54, 59, 62], // B minor
+  [43, 50, 55, 59], // G major
 ];
 
 chords.forEach((chord, chordIndex) => {
@@ -255,7 +255,7 @@ chords[0].forEach((note, noteIndex) => {
   addTone(ambience, { start: 14.8, duration: 2, frequency: midi(note), gain: noteIndex === 0 ? 0.045 : 0.03, attack: 0.8, release: 0.3, pan: [-0.48, -0.16, 0.18, 0.5][noteIndex], harmonics: [1, 0.18, 0.06] });
 });
 
-[74, 77, 81, 84, 81, 77, 74, 69].forEach((note, index) => {
+[74, 78, 81, 86, 83, 81, 78, 76].forEach((note, index) => {
   addTone(ambience, { start: 0.8 + index * 1.85, duration: 1.25, frequency: midi(note), gain: 0.023, attack: 0.025, release: 1.05, pan: index % 2 ? 0.52 : -0.52, harmonics: [1, 0.28, 0.1] });
 });
 addNoise(ambience, { duration: ambienceDuration, gain: 0.012, attack: 1.2, release: 1.2, color: 0.008, seed: 12011, pan: -0.35 });

@@ -16,6 +16,7 @@ Reemplazar el audio de prototipo por una identidad sonora original, más cálida
 - El tiempo agotado utiliza tres avisos descendentes y un golpe grave final.
 - La victoria pasó a ser una cortina de 3,35 segundos con arpegio, acorde final y destellos estéreo.
 - La ambientación pasó a ser un loop armónico de 16 segundos, deliberadamente discreto para no competir con las voces.
+- Tras la prueba de carácter, el ambiente, el turno y la victoria se llevaron a una paleta de re mayor con progresión pop y melodías ascendentes: más alegre y juguetona, menos solemne.
 - Los eventos importantes reducen temporalmente la música de fondo para mantener una jerarquía clara.
 - La música se detiene cuando la pestaña queda oculta y vuelve al regresar si el usuario tenía el audio activado.
 - Se eliminó la superposición de dos efectos al activar el audio.
