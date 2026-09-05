@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import LobbyView from "@/components/views/LobbyView";
 import RoundTopicSelectionView from "@/components/views/RoundTopicSelectionView";
@@ -15,6 +15,7 @@ import Logo from "@/components/Logo";
 
 export default function RoomPage() {
     const params = useParams();
+    const router = useRouter();
     const roomId = params.roomId as string;
     const [room, setRoom] = useState<Room | null>(null);
     const [persistenceMode, setPersistenceMode] = useState<"redis" | "memory">("memory");
@@ -147,7 +148,7 @@ export default function RoomPage() {
                 </p>
                 {connectionError && (
                     <button
-                        onClick={() => { window.location.href = "/"; }}
+                        onClick={() => router.push("/")}
                         style={{ padding: "1rem 2rem", background: "var(--accent-color)", color: "white", border: "none", borderRadius: "var(--radius-md)", fontWeight: 700, fontSize: "1rem", cursor: "pointer" }}
                     >
                         Volver al inicio
@@ -200,7 +201,7 @@ export default function RoomPage() {
                     <button
                         onClick={() => {
                             if (confirm("Estas seguro de que deseas salir de la sala?")) {
-                                window.location.href = "/";
+                                router.push("/");
                             }
                         }}
                         className={styles.exitButton}

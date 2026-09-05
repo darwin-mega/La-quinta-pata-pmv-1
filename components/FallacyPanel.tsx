@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { getFallaciesByHierarchy, FallacyLevel, Fallacy } from "@/data/fallacies";
+import { fallacies, getFallaciesByHierarchy, quickFallacyIds, FallacyLevel, Fallacy } from "@/data/fallacies";
 
 export default function FallacyPanel({ onSignal, onClose }: { onSignal: (fId: string) => void, onClose: () => void }) {
     const categories = getFallaciesByHierarchy();
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [confirmingId, setConfirmingId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<FallacyLevel | "todas">("base");
+    const [activeTab, setActiveTab] = useState<FallacyLevel | "rapidas" | "todas">("rapidas");
+    const quickFallacies = quickFallacyIds.flatMap(id => {
+        const match = fallacies.find(fallacy => fallacy.id === id);
+        return match ? [match] : [];
+    });
 
     const renderFallacyCard = (f: Fallacy) => {
         const isExpanded = expandedId === f.id;
@@ -90,7 +94,7 @@ export default function FallacyPanel({ onSignal, onClose }: { onSignal: (fId: st
     };
 
     return (
-        <div style={{
+        <div role="dialog" aria-modal="true" aria-label="Selector de falacias" style={{
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
             backgroundColor: 'rgba(10, 10, 12, 0.98)',
@@ -107,7 +111,8 @@ export default function FallacyPanel({ onSignal, onClose }: { onSignal: (fId: st
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Escuchá con atención y denunciá errores de lógica.</p>
                 </div>
                 <button 
-                    onClick={onClose} 
+                    onClick={onClose}
+                    aria-label="Cerrar selector de falacias"
                     style={{ 
                         background: 'rgba(255,255,255,0.05)', 
                         border: '1px solid rgba(255,255,255,0.1)', 
@@ -137,7 +142,7 @@ export default function FallacyPanel({ onSignal, onClose }: { onSignal: (fId: st
                 top: 0,
                 zIndex: 20
             }}>
-                {(['base', 'intermedia', 'avanzada', 'todas'] as const).map(tab => (
+                {(['rapidas', 'base', 'intermedia', 'avanzada', 'todas'] as const).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -148,7 +153,7 @@ export default function FallacyPanel({ onSignal, onClose }: { onSignal: (fId: st
                             border: 'none',
                             backgroundColor: activeTab === tab ? 'var(--accent-color)' : 'transparent',
                             color: activeTab === tab ? 'white' : 'var(--text-secondary)',
-                            fontSize: '0.75rem',
+                            fontSize: '0.68rem',
                             fontWeight: 800,
                             textTransform: 'uppercase',
                             letterSpacing: '0.05em',
@@ -162,7 +167,14 @@ export default function FallacyPanel({ onSignal, onClose }: { onSignal: (fId: st
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', paddingBottom: '3rem' }}>
-                {activeTab === 'todas' ? (
+                {activeTab === 'rapidas' ? (
+                    <>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '0.2rem' }}>
+                            Las seis más comunes. Tocá una para ver la explicación antes de denunciar.
+                        </p>
+                        {quickFallacies.map(renderFallacyCard)}
+                    </>
+                ) : activeTab === 'todas' ? (
                     Object.entries(categories).map(([level, items]) => (
                         <div key={level} style={{ marginBottom: '1rem' }}>
                             <h4 style={{ 

@@ -110,8 +110,74 @@ export const fallacies: Fallacy[] = [
         technicalName: "Non sequitur",
         definition: "Llegar a una conclusión que no tiene ninguna relación lógica con las premisas anteriores.",
         example: "“Si hoy es martes, entonces deberíamos comprar un elefante.”"
+    },
+    {
+        id: "f15",
+        level: "intermedia",
+        name: "Probá que no",
+        technicalName: "Inversión de la carga de la prueba",
+        definition: "Exigir que los demás refuten una afirmación que quien la hace todavía no respaldó con evidencia.",
+        example: "Los fantasmas existen. Si no me creés, demostrá que no existe ninguno."
+    },
+    {
+        id: "f16",
+        level: "base",
+        name: "La calesita",
+        technicalName: "Razonamiento circular",
+        definition: "Usar la propia conclusión como prueba, repitiendo la misma idea con otras palabras sin aportar una razón independiente.",
+        example: "Este medio siempre dice la verdad porque es confiable, y sabemos que es confiable porque siempre dice la verdad."
+    },
+    {
+        id: "f17",
+        level: "intermedia",
+        name: "Elegir solo lo que conviene",
+        technicalName: "Selección sesgada / Cherry picking",
+        definition: "Mostrar únicamente los datos favorables e ignorar evidencia relevante que podría debilitar la conclusión.",
+        example: "Este método funciona: te muestro los tres casos exitosos, pero no los cuarenta en que falló."
+    },
+    {
+        id: "f18",
+        level: "intermedia",
+        name: "Nadie lo descartó",
+        technicalName: "Apelación a la ignorancia",
+        definition: "Dar algo por verdadero solo porque no se demostró falso, o por falso solo porque no se demostró verdadero.",
+        example: "Nadie pudo probar que no nos visitaron extraterrestres; entonces seguro ocurrió."
+    },
+    {
+        id: "f19",
+        level: "avanzada",
+        name: "Poner todo al mismo nivel",
+        technicalName: "Falsa equivalencia",
+        definition: "Tratar dos situaciones como si fueran comparables cuando sus diferencias relevantes cambian la evaluación.",
+        example: "Llegar cinco minutos tarde y faltar una semana sin aviso son lo mismo: en ambos casos incumpliste."
+    },
+    {
+        id: "f20",
+        level: "intermedia",
+        name: "Ya invertimos demasiado",
+        technicalName: "Falacia del costo hundido",
+        definition: "Defender que hay que continuar una decisión mala solo por el tiempo, dinero o esfuerzo ya gastados, aunque no puedan recuperarse.",
+        example: "La película es insoportable, pero ya vimos dos horas; tenemos que terminarla."
+    },
+    {
+        id: "f21",
+        level: "avanzada",
+        name: "De la parte al todo",
+        technicalName: "Falacia de composición",
+        definition: "Suponer que lo cierto para cada parte también tiene que ser cierto para el conjunto completo.",
+        example: "Cada jugador del equipo es una estrella, así que necesariamente serán el mejor equipo."
+    },
+    {
+        id: "f22",
+        level: "avanzada",
+        name: "Cambiar el sentido",
+        technicalName: "Equívoco",
+        definition: "Usar una misma palabra con significados distintos dentro del argumento para que la conclusión parezca válida.",
+        example: "Solo el ser humano es racional. Ninguna mujer es un hombre. Por lo tanto, ninguna mujer es racional."
     }
 ];
+
+export const quickFallacyIds = ["f1", "f2", "f3", "f4", "f6", "f16"] as const;
 
 export const getFallacies = (level?: FallacyLevel | "all"): Fallacy[] => {
     if (!level || level === "all") return fallacies;

@@ -12,7 +12,10 @@ export default function PreparationView({ room, myRole, onStartDebate, isHost }:
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div style={{ textAlign: 'center' }}>
                 <h2 style={{ color: 'var(--accent-color)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Fase de Preparación</h2>
-                <Timer durationSec={prepTime} />
+                <Timer durationSec={prepTime} onComplete={isHost ? onStartDebate : undefined} />
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', marginTop: '0.4rem' }}>
+                    El debate empieza automáticamente cuando el reloj llega a cero.
+                </p>
             </div>
 
             <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -54,7 +57,7 @@ export default function PreparationView({ room, myRole, onStartDebate, isHost }:
                     onClick={onStartDebate}
                     style={{ width: '100%', padding: '1rem', background: 'var(--accent-color)', color: 'white', borderRadius: 'var(--radius-md)', fontSize: '1.1rem', fontWeight: 600 }}
                 >
-                    Iniciar Debate (Saltar reloj)
+                    Empezar ahora
                 </button>
             ) : (
                 <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>El host iniciará el debate...</p>

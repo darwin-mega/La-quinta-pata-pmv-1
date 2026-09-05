@@ -1,5 +1,6 @@
 import Link from "next/link";
 import JoinInput from "@/components/JoinInput";
+import RecentRoomCard from "@/components/RecentRoomCard";
 import styles from "./page.module.css";
 
 const BENEFITS = [
@@ -46,6 +47,7 @@ export default function Home() {
                         </p>
 
                         <div className={styles.actionStack}>
+                            <RecentRoomCard />
                             <Link href="/create-room" className={styles.primaryCta}>
                                 Crear sala
                             </Link>
@@ -56,6 +58,9 @@ export default function Home() {
                             </div>
 
                             <div className={styles.secondaryLinks}>
+                                <Link href="/tutorial" className={styles.secondaryCta}>
+                                    Probar tutorial
+                                </Link>
                                 <Link href="/how-to-play" className={styles.secondaryCta}>
                                     Ver como funciona
                                 </Link>

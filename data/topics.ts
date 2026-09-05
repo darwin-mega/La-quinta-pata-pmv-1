@@ -278,6 +278,31 @@ const rawTopics: TopicSeed[] = [
         angleB: "Delegar demasiado criterio propio tambien puede volverte dependiente.",
     },
 
+    {
+        id: "m14", legacyIntensity: "medio", category: "sociedad",
+        statement: "La meritocracia describe peor la realidad de lo que ayuda a motivar.",
+        angleA: "Oculta el peso del origen, los contactos y las oportunidades desiguales.",
+        angleB: "Aunque sea imperfecta, reconocer esfuerzo y decisiones sigue siendo motivador.",
+    },
+    {
+        id: "m15", legacyIntensity: "medio", category: "filosofia",
+        statement: "La astrologia puede ser valiosa aunque no sea una ciencia.",
+        angleA: "Puede servir como lenguaje simbolico para reflexionar sobre la propia vida.",
+        angleB: "Presentarla como guia confunde intuicion personal con conocimiento confiable.",
+    },
+    {
+        id: "m16", legacyIntensity: "medio", category: "trabajo",
+        statement: "Una empresa deberia poder usar inteligencia artificial para elegir a quien contratar.",
+        angleA: "Bien auditada puede ordenar decisiones y reducir arbitrariedades humanas.",
+        angleB: "Puede automatizar sesgos y ocultar criterios que afectan vidas reales.",
+    },
+    {
+        id: "m17", legacyIntensity: "medio", category: "relaciones",
+        statement: "Los padres deberian poder revisar el celular de sus hijos menores sin permiso.",
+        angleA: "Su responsabilidad de cuidado puede justificar controles ante riesgos concretos.",
+        angleB: "La confianza y la intimidad tambien son necesarias para crecer con autonomia.",
+    },
+
     // --- FILOSOS ---
     {
         id: "f1",
@@ -584,6 +609,90 @@ const rawTopics: TopicSeed[] = [
         statement: "El nacionalismo hace mas mal que bien.",
         angleA: "Cuando se intensifica suele cerrar, dividir y volver hostil a una sociedad.",
         angleB: "Tambien puede dar cohesion, pertenencia y defensa de intereses comunes.",
+    },
+    {
+        id: "f39", legacyIntensity: "filoso", category: "etica",
+        statement: "El aborto voluntario durante las primeras semanas deberia ser una decision de la persona embarazada.",
+        angleA: "La autonomia corporal y la salud vuelven central su capacidad de decidir.",
+        angleB: "El valor moral atribuido a la vida prenatal tambien puede justificar limites.",
+    },
+    {
+        id: "f40", legacyIntensity: "filoso", category: "etica",
+        statement: "La eutanasia deberia permitirse a adultos con sufrimiento irreversible.",
+        angleA: "Decidir el final puede ser parte de la dignidad y evitar dolor intolerable.",
+        angleB: "Los errores, presiones y cambios de voluntad exigen proteger la vida con limites fuertes.",
+    },
+    {
+        id: "f41", legacyIntensity: "filoso", category: "politica",
+        statement: "Un ingreso basico universal seria mas justo que condicionar cada ayuda estatal.",
+        angleA: "Da un piso simple, universal y menos humillante frente a la necesidad.",
+        angleB: "Puede asignar recursos sin distinguir necesidades y debilitar otros apoyos clave.",
+    },
+    {
+        id: "f42", legacyIntensity: "filoso", category: "politica",
+        statement: "La crisis climatica justifica limitar consumos individuales de alto impacto.",
+        angleA: "Un dano colectivo grave exige obligaciones, no solo elecciones voluntarias.",
+        angleB: "Controlar consumos personales puede ser injusto, regresivo y facil de abusar.",
+    },
+    {
+        id: "f43", legacyIntensity: "filoso", category: "ciencia",
+        statement: "Deberiamos permitir mejoras geneticas humanas, no solo curar enfermedades.",
+        angleA: "Ampliar capacidades puede ser una continuacion legitima de la medicina.",
+        angleB: "Podria crear desigualdades biologicas y decisiones irreversibles para futuras personas.",
+    },
+    {
+        id: "f44", legacyIntensity: "filoso", category: "etica",
+        statement: "Pagar por la donacion de organos podria salvar mas vidas de las que pondria en riesgo.",
+        angleA: "Una regulacion estricta podria aumentar la oferta y reducir muertes evitables.",
+        angleB: "Convertiria la necesidad economica en presion para vender partes del cuerpo.",
+    },
+    {
+        id: "f45", legacyIntensity: "filoso", category: "etica",
+        statement: "Criar animales para alimento sera visto como una injusticia moral.",
+        angleA: "El sufrimiento evitable pesa mas a medida que existen alternativas.",
+        angleB: "La alimentacion animal puede ser moral con bienestar y produccion responsable.",
+    },
+    {
+        id: "f46", legacyIntensity: "filoso", category: "sociedad",
+        statement: "La apropiacion cultural puede causar un dano que justifique limites sociales.",
+        angleA: "Usar simbolos sin contexto puede explotar o degradar a grupos historicamente relegados.",
+        angleB: "El intercambio cultural pierde riqueza si toda influencia se trata como propiedad cerrada.",
+    },
+    {
+        id: "f47", legacyIntensity: "filoso", category: "filosofia",
+        statement: "Una experiencia paranormal personal puede justificar una creencia aunque no convenza a los demas.",
+        angleA: "La experiencia directa puede tener valor racional para quien la vivio.",
+        angleB: "Sin controles ni evidencia externa, la vivencia no distingue realidad de error.",
+    },
+    {
+        id: "f48", legacyIntensity: "filoso", category: "tecnologia",
+        statement: "Una inteligencia artificial podria tomar mejores decisiones publicas que representantes electos.",
+        angleA: "Podria evaluar mas evidencia con menos ego, improvisacion e interes personal.",
+        angleB: "Decidir politicamente exige valores, legitimidad y responsabilidad que un sistema no posee.",
+    },
+    {
+        id: "f49", legacyIntensity: "filoso", category: "educacion",
+        statement: "La educacion religiosa tiene lugar en la escuela publica si incluye varias creencias.",
+        angleA: "Comprender religiones ayuda a leer historia, cultura y valores diversos.",
+        angleB: "La escuela publica debe evitar legitimar creencias que cada familia decide en privado.",
+    },
+    {
+        id: "f50", legacyIntensity: "filoso", category: "sociedad",
+        statement: "Regular el trabajo sexual protege mas que intentar eliminarlo.",
+        angleA: "Reconocerlo permite derechos, controles sanitarios y menos clandestinidad.",
+        angleB: "Normalizarlo puede consolidar explotacion y desigualdades dificiles de llamar libres.",
+    },
+    {
+        id: "f51", legacyIntensity: "filoso", category: "relaciones",
+        statement: "La monogamia es mas una norma cultural que una necesidad afectiva.",
+        angleA: "Existen vinculos consensuados diversos que no encajan en una unica forma.",
+        angleB: "La exclusividad puede responder a necesidades estables de confianza y cuidado.",
+    },
+    {
+        id: "f52", legacyIntensity: "filoso", category: "politica",
+        statement: "Las carceles deberian reemplazarse en gran parte por sistemas de reparacion y reinsercion.",
+        angleA: "El encierro suele reproducir violencia sin reparar a victimas ni reducir reincidencia.",
+        angleB: "Hay danos y riesgos que requieren separacion, castigo y proteccion efectiva.",
     },
 ];
 

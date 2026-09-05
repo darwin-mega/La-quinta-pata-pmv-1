@@ -38,6 +38,12 @@ const soundAssetVolumes: Record<SoundAssetKey, number> = {
 
 const audioCache = new Map<SoundAssetKey, HTMLAudioElement>();
 
+function vibrate(pattern: number | number[]) {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate(pattern);
+    }
+}
+
 function canUseHtmlAudio() {
     return typeof window !== "undefined" && typeof Audio !== "undefined";
 }
@@ -303,6 +309,7 @@ export function stopBackgroundMusic() {
 
 // Sonido de inicio de turno (llamada de atención dramática)
 export function playTurnSound() {
+    vibrate([70, 35, 90]);
     if (playRecordedSound("turn")) return;
 
     withFx((ctx, output) => {
@@ -326,6 +333,7 @@ export function playTurnSound() {
 
 // Sonido de falacia señalada (alerta / tensión)
 export function playFallacySound() {
+    vibrate([110, 55, 110]);
     if (playRecordedSound("fallacy")) return;
 
     withFx((ctx, output) => {
@@ -380,6 +388,7 @@ export function playTickSound() {
 
 // Golpe final cuando el tiempo llega a cero
 export function playTimeoutSound() {
+    vibrate(180);
     if (playRecordedSound("timeout")) return;
 
     withFx((ctx, output) => {
@@ -408,6 +417,7 @@ export function playTimeoutSound() {
 
 // Sonido de resultado / victoria (cortina de resolución)
 export function playWinSound() {
+    vibrate([60, 40, 60, 40, 150]);
     if (playRecordedSound("victory")) return;
 
     withFx((ctx, output) => {
@@ -434,6 +444,7 @@ export function playWinSound() {
 
 // Sonido sutil de botón
 export function playButtonSound() {
+    vibrate(12);
     if (playRecordedSound("button")) return;
 
     withFx((ctx, output) => {
@@ -457,6 +468,7 @@ export function playButtonSound() {
 
 // Sonido de cambio de interfaz / transición de fase
 export function playPhaseChangeSound() {
+    vibrate(35);
     if (playRecordedSound("phase")) return;
 
     withFx((ctx, output) => {

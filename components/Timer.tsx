@@ -14,6 +14,11 @@ export default function Timer({
 }) {
     const [timeLeft, setTimeLeft] = useState(durationSec);
     const hasCompletedRef = useRef(false);
+    const onCompleteRef = useRef(onComplete);
+
+    useEffect(() => {
+        onCompleteRef.current = onComplete;
+    }, [onComplete]);
 
     useEffect(() => {
         setTimeLeft(durationSec);
@@ -25,7 +30,7 @@ export default function Timer({
             if (!hasCompletedRef.current) {
                 hasCompletedRef.current = true;
                 playTimeoutSound();
-                onComplete?.();
+                onCompleteRef.current?.();
             }
             return;
         }
@@ -42,7 +47,7 @@ export default function Timer({
         }, 1000);
 
         return () => clearInterval(int);
-    }, [timeLeft, onComplete, isPaused]);
+    }, [timeLeft, isPaused]);
 
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;

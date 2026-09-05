@@ -1,5 +1,6 @@
 import { Room } from "@/lib/store";
 import { hasGameEnded } from "@/lib/game";
+import { useRouter } from "next/navigation";
 
 export default function MesaLeaderboardView({
     room,
@@ -10,6 +11,7 @@ export default function MesaLeaderboardView({
     onNextRound: () => void;
     onRestartGame: () => void;
 }) {
+    const router = useRouter();
     const sortedPlayers = [...room.players].sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         return b.wins - a.wins;
@@ -71,7 +73,7 @@ export default function MesaLeaderboardView({
                 <button
                     onClick={() => {
                         if (confirm("Seguro quieres volver al inicio?")) {
-                            window.location.href = "/";
+                            router.push("/");
                         }
                     }}
                     style={{ padding: "1.5rem", backgroundColor: "transparent", border: "2px solid var(--danger-color)", color: "var(--danger-color)", borderRadius: "var(--radius-md)", fontSize: "1.2rem", fontWeight: 800, cursor: "pointer", transition: "all 0.2s" }}

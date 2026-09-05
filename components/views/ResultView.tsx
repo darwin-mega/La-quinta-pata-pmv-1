@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Check, Share2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Room } from "@/lib/store";
 import { fallacies } from "@/data/fallacies";
 import { playWinSound } from "@/lib/sounds";
@@ -15,10 +17,12 @@ export default function ResultView({
     onNextRound: () => void;
     onRestartGame: () => void;
 }) {
+    const router = useRouter();
     const round = room.rounds[room.currentRoundIndex];
     const pA = room.players.find(player => player.id === round.debatienteA_Id);
     const pB = room.players.find(player => player.id === round.debatienteB_Id);
     const isFinalRound = hasGameEnded(room);
+    const [shareStatus, setShareStatus] = useState<"idle" | "shared">("idle");
 
     useEffect(() => {
         playWinSound();
@@ -36,6 +40,29 @@ export default function ResultView({
     round.fallaciesSignaled.forEach(signal => {
         fallacyCounts[signal.fallacyId] = (fallacyCounts[signal.fallacyId] || 0) + 1;
     });
+
+    const shareResult = async () => {
+        const ranking = [...room.players]
+            .sort((a, b) => b.score - a.score)
+            .map((player, index) => `${index + 1}. ${player.name}: ${player.score} pts`)
+            .join("\n");
+        const winner = round.winnerId === "empate"
+            ? "La ronda terminó empatada."
+            : `Ganó ${round.winnerId === round.debatienteA_Id ? pA?.name : pB?.name}.`;
+        const text = `La Quinta Pata · Ronda ${round.number}\n${winner}\n\n${ranking}`;
+
+        try {
+            if (navigator.share) {
+                await navigator.share({ title: "Resultado de La Quinta Pata", text, url: window.location.href });
+            } else {
+                await navigator.clipboard.writeText(`${text}\n${window.location.href}`);
+            }
+            setShareStatus("shared");
+            window.setTimeout(() => setShareStatus("idle"), 2200);
+        } catch {
+            // El usuario puede cancelar el diálogo nativo sin que sea un error del juego.
+        }
+    };
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem", animation: "fadeIn 0.5s ease-out" }}>
@@ -172,6 +199,15 @@ export default function ResultView({
                 )}
             </div>
 
+            <button
+                type="button"
+                onClick={shareResult}
+                style={{ width: "100%", padding: "1rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.55rem", color: "white", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "var(--radius-md)", background: "rgba(255,255,255,0.05)", fontWeight: 800 }}
+            >
+                {shareStatus === "shared" ? <Check size={19} /> : <Share2 size={19} />}
+                {shareStatus === "shared" ? "Resultado listo para compartir" : "Compartir resultado"}
+            </button>
+
             {isHost && !isFinalRound ? (
                 <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
                     <button
@@ -205,7 +241,7 @@ export default function ResultView({
                     {isHost ? (
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                             <button
-                                onClick={() => { window.location.href = "/"; }}
+                                onClick={() => router.push("/")}
                                 style={{
                                     padding: "1rem",
                                     backgroundColor: "transparent",
@@ -243,7 +279,7 @@ export default function ResultView({
                                 </p>
                             </div>
                             <button
-                                onClick={() => { window.location.href = "/"; }}
+                                onClick={() => router.push("/")}
                                 style={{
                                     padding: "1rem",
                                     backgroundColor: "transparent",

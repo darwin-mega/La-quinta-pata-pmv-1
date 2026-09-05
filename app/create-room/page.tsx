@@ -12,6 +12,7 @@ import {
     getMaxRoundsForPlayers,
 } from "@/lib/game";
 import { MAX_PLAYER_NAME_LENGTH } from "@/lib/topic-types";
+import { saveRecentRoom } from "@/lib/recent-room";
 
 type PlayMode = "individual" | "mesa";
 type FlowStep = 1 | 2 | 3;
@@ -185,6 +186,12 @@ export default function CreateRoom() {
 
             localStorage.setItem(`laQuintaPata_playerId_${data.room.id}`, data.playerId);
             localStorage.setItem(`laQuintaPata_isHost_${data.room.id}`, "true");
+            saveRecentRoom({
+                roomId: data.room.id,
+                roomName: data.room.name || `sala ${data.room.id}`,
+                path: playMode === "mesa" ? `/mesa/${data.room.id}` : `/room/${data.room.id}`,
+                updatedAt: Date.now(),
+            });
 
             if (playMode === "mesa") {
                 router.push(`/mesa/${data.room.id}`);

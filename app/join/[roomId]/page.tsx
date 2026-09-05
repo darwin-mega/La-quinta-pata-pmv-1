@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from '../../create-room/page.module.css'; // Reusing form styles
+import { saveRecentRoom } from '@/lib/recent-room';
 
 export default function JoinRoom() {
     const router = useRouter();
@@ -45,6 +46,12 @@ export default function JoinRoom() {
                 // Save identity locally
                 localStorage.setItem(`laQuintaPata_playerId_${roomId}`, data.playerId);
                 localStorage.setItem(`laQuintaPata_isHost_${roomId}`, 'false');
+                saveRecentRoom({
+                    roomId,
+                    roomName: data.room?.name || `sala ${roomId}`,
+                    path: `/room/${roomId}`,
+                    updatedAt: Date.now(),
+                });
                 router.push(`/room/${roomId}`);
                 return true;
             } catch (err: any) {

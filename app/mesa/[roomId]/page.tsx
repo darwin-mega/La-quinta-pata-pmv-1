@@ -264,7 +264,7 @@ export default function MesaPage() {
                 {room.state === "finished" && (
                     <div className="glass-panel" style={{ padding: "3rem", textAlign: "center", maxWidth: "800px", width: "100%" }}>
                         <h2 style={{ fontSize: "2.5rem", margin: 0, color: "white" }}>Partida finalizada</h2>
-                        <button onClick={() => window.location.href = "/"} style={{ marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "var(--radius-md)", fontWeight: "bold", fontSize: "1.2rem", border: "none", cursor: "pointer" }}>
+                        <button onClick={() => router.push("/")} style={{ marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "var(--radius-md)", fontWeight: "bold", fontSize: "1.2rem", border: "none", cursor: "pointer" }}>
                             Volver al inicio
                         </button>
                     </div>
