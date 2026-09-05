@@ -1,6 +1,6 @@
 # La Quinta Pata — Informe de Etapa 2
 
-Fecha: 4 de septiembre de 2026
+Inicio: 4 de septiembre de 2026 · cierre: 5 de septiembre de 2026
 
 ## Objetivo
 
@@ -73,4 +73,10 @@ Los temas se eligieron por su capacidad de revelar desacuerdos de valores y por 
 - Build de producción: aprobado, incluida la nueva ruta estática `/tutorial`.
 - ESLint: aprobado sin errores.
 - Tutorial móvil: flujo completo aprobado en 390 × 844, sin errores de consola.
-- La prueba E2E de producción y la confirmación del despliegue se registran al publicar esta versión.
+- Producción: nueva ruta y cambios visibles en `https://la-quinta-pata-pmv-1.vercel.app`.
+- E2E de producción: sala `TJAM` creada, dos participantes incorporados por API, tres jugadores recuperados por el host y ronda iniciada.
+- Transición automática: la preparación terminó y el servidor mostró el debate activo sin intervención manual.
+- Selector real: vista “Rápidas” con seis opciones y nivel avanzado con las nuevas falsa equivalencia, composición y equívoco.
+- Persistencia: endpoint de estado respondió HTTP 200 con `persistenceMode=redis`.
+- Recuperación: la portada mostró el acceso a la última sala creada.
+- Consola del navegador: sin errores ni advertencias durante tutorial y creación de sala.
