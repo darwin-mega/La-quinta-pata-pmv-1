@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { GameDuration, GameIntensity } from "@/lib/store";
-import { getGameDurationLabel, getGameIntensityLabel } from "@/lib/game";
+import {
+    getEstimatedGameMinutesForPlayers,
+    getGameDurationDescription,
+    getGameDurationLabel,
+    getGameIntensityLabel,
+    getMaxRoundsForPlayers,
+} from "@/lib/game";
 import { MAX_PLAYER_NAME_LENGTH } from "@/lib/topic-types";
 
 type PlayMode = "individual" | "mesa";
@@ -26,12 +32,12 @@ const MODE_OPTIONS: Array<{
     {
         id: "individual",
         title: "Individual",
-        description: "Cada jugador usa su propio dispositivo",
+        description: "Cada jugador usa su dispositivo. Con 3 o más se activa el jurado de falacias.",
     },
     {
         id: "mesa",
         title: "Mesa",
-        description: "Comparten dispositivos",
+        description: "Un conductor guía la partida y registra las decisiones del grupo.",
     },
 ];
 
@@ -46,6 +52,9 @@ export default function CreateRoom() {
     const [intensity, setIntensity] = useState<GameIntensity>("medio");
     const [duration, setDuration] = useState<GameDuration>("corta");
     const [topicSelectionMode, setTopicSelectionMode] = useState<"automatic" | "manual">("automatic");
+    const totalSteps = playMode === "mesa" ? 3 : 2;
+    const visibleStep = step === 1 ? 1 : playMode === "mesa" ? step : 2;
+    const estimatedPlayers = playMode === "mesa" ? playerCount : undefined;
 
     const getMesaPlayerNames = (count = playerCount) => {
         if (!count) return [];
@@ -192,6 +201,13 @@ export default function CreateRoom() {
     return (
         <main className="page-container">
             <div className={styles.wizardShell}>
+                <div className={styles.progressHeader} aria-label={`Paso ${visibleStep} de ${totalSteps}`}>
+                    <span>Paso {visibleStep} de {totalSteps}</span>
+                    <div className={styles.progressTrack} aria-hidden="true">
+                        <div className={styles.progressFill} style={{ width: `${(visibleStep / totalSteps) * 100}%` }} />
+                    </div>
+                </div>
+
                 {step > 1 && (
                     <button type="button" onClick={handleBack} className={styles.backButton}>
                         Atras
@@ -231,6 +247,7 @@ export default function CreateRoom() {
                                     type="button"
                                     onClick={() => handlePlayerCountSelect(count)}
                                     className={`${styles.countButton} ${playerCount === count ? styles.countButtonActive : ""}`}
+                                    aria-pressed={playerCount === count}
                                 >
                                     {count}
                                 </button>
@@ -284,6 +301,7 @@ export default function CreateRoom() {
                                             type="button"
                                             onClick={() => setIntensity(option)}
                                             className={`${styles.optionButton} ${intensity === option ? styles.optionButtonActive : ""}`}
+                                            aria-pressed={intensity === option}
                                         >
                                             {getGameIntensityLabel(option)}
                                         </button>
@@ -292,7 +310,7 @@ export default function CreateRoom() {
                             </div>
 
                             <div className={styles.optionGroup}>
-                                <span className={styles.groupLabel}>Largo</span>
+                                <span className={styles.groupLabel}>Duración</span>
                                 <div className={styles.optionGrid}>
                                     {DURATION_OPTIONS.map(option => (
                                         <button
@@ -300,10 +318,22 @@ export default function CreateRoom() {
                                             type="button"
                                             onClick={() => setDuration(option)}
                                             className={`${styles.optionButton} ${duration === option ? styles.optionButtonActive : ""}`}
+                                            aria-pressed={duration === option}
                                         >
-                                            {getGameDurationLabel(option)}
+                                            <span className={styles.optionTitle}>{getGameDurationLabel(option)}</span>
+                                            <span className={styles.optionDescription}>{getGameDurationDescription(option)}</span>
                                         </button>
                                     ))}
+                                </div>
+                                <div className={styles.durationEstimate} aria-live="polite">
+                                    {estimatedPlayers ? (
+                                        <>
+                                            <strong>{getMaxRoundsForPlayers(estimatedPlayers, duration)} rondas</strong>
+                                            <span>· aproximadamente {getEstimatedGameMinutesForPlayers(estimatedPlayers, duration)} minutos</span>
+                                        </>
+                                    ) : (
+                                        <span>La cantidad final de rondas se ajusta cuando entren los jugadores.</span>
+                                    )}
                                 </div>
                             </div>
 
@@ -316,6 +346,7 @@ export default function CreateRoom() {
                                             type="button"
                                             onClick={() => setTopicSelectionMode(option.id)}
                                             className={`${styles.optionButton} ${topicSelectionMode === option.id ? styles.optionButtonActive : ""}`}
+                                            aria-pressed={topicSelectionMode === option.id}
                                         >
                                             <span className={styles.optionTitle}>{option.title}</span>
                                             <span className={styles.optionDescription}>{option.description}</span>

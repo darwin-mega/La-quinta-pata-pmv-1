@@ -1,0 +1,56 @@
+.toggle {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 48px;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid rgba(156, 163, 175, 0.35);
+    border-radius: 999px;
+    background: rgba(18, 19, 25, 0.92);
+    color: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.enabled {
+    border-color: rgba(16, 185, 129, 0.45);
+    background: rgba(10, 18, 14, 0.92);
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.18);
+}
+
+.copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.05;
+}
+
+.status {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hint {
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+}
+
+@media (max-width: 640px) {
+    .toggle {
+        width: 48px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .copy,
+    .musicIcon {
+        display: none;
+    }
+}

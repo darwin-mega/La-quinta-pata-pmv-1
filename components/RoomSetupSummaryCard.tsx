@@ -1,5 +1,10 @@
 import { Room } from "@/lib/store";
-import { getGameDurationLabel, getGameIntensityLabel } from "@/lib/game";
+import {
+    getEstimatedGameMinutes,
+    getGameDurationLabel,
+    getGameIntensityLabel,
+    getMaxRounds,
+} from "@/lib/game";
 
 export default function RoomSetupSummaryCard({
     room,
@@ -10,6 +15,8 @@ export default function RoomSetupSummaryCard({
     accentColor?: string;
     title?: string;
 }) {
+    const rounds = getMaxRounds(room);
+
     return (
         <div className="glass-panel" style={{ padding: "1rem", width: "100%", borderLeft: `4px solid ${accentColor}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
@@ -34,9 +41,9 @@ export default function RoomSetupSummaryCard({
                     </div>
                 </div>
                 <div>
-                    <div style={{ color: "var(--text-secondary)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>Largo</div>
+                    <div style={{ color: "var(--text-secondary)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>Duración</div>
                     <div style={{ color: "white", fontSize: "0.95rem", lineHeight: 1.45, marginTop: "0.2rem" }}>
-                        {getGameDurationLabel(room.duration)}
+                        {getGameDurationLabel(room.duration)} · {rounds} {rounds === 1 ? "ronda" : "rondas"}
                     </div>
                 </div>
                 <div>
@@ -51,6 +58,9 @@ export default function RoomSetupSummaryCard({
                         {room.topicSelectionMode === "automatic" ? "Automatico" : "Manual"}
                     </div>
                 </div>
+            </div>
+            <div style={{ marginTop: "0.9rem", paddingTop: "0.8rem", borderTop: "1px solid rgba(255,255,255,0.08)", color: "var(--text-secondary)", fontSize: "0.82rem" }}>
+                Duración estimada: <strong style={{ color: "var(--warning-color)" }}>{getEstimatedGameMinutes(room)} minutos</strong>
             </div>
         </div>
     );

@@ -170,9 +170,18 @@ export default function RoomPage() {
     const myRole = myPlayer?.role || "jurado";
     const roleBorderColor =
         myRole === "host" ? "var(--warning-color)" :
-        myRole.includes("A") ? "#ef4444" :
-        myRole.includes("B") ? "#3b82f6" :
+        myRole === "debatiente_a" ? "var(--success-color)" :
+        myRole === "debatiente_b" ? "#3b82f6" :
         "var(--success-color)";
+    const roleLabel = room.state === "lobby" && isHost
+        ? "Anfitrión"
+        : myRole === "debatiente_a"
+            ? "A favor"
+            : myRole === "debatiente_b"
+                ? "En contra"
+                : myRole === "host"
+                    ? "Conductor"
+                    : "Jurado";
 
     return (
         <div className={styles.roomContainer}>
@@ -186,7 +195,7 @@ export default function RoomPage() {
                 </div>
                 <div className={styles.headerActions}>
                     <div className={styles.headerRole} style={{ borderColor: roleBorderColor }}>
-                        {myRole === "host" ? "Host" : myRole.replace("_", " ")}
+                        {roleLabel}
                     </div>
                     <button
                         onClick={() => {
@@ -196,6 +205,7 @@ export default function RoomPage() {
                         }}
                         className={styles.exitButton}
                         title="Salir de la partida"
+                        aria-label="Salir de la partida"
                     >
                         X
                     </button>

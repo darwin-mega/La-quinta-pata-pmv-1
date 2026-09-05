@@ -3,7 +3,8 @@ import { Room } from "@/lib/store";
 import Timer from "../Timer";
 import FallacyPanel from "../FallacyPanel";
 import { playTurnSound, playFallacySound } from "@/lib/sounds";
-import { Info, AlertTriangle, MessageSquare } from "lucide-react";
+import { AlertTriangle, MessageSquare } from "lucide-react";
+import styles from "./DebateView.module.css";
 
 export default function DebateView({
     room, myRole, playerId, isHost,
@@ -23,6 +24,7 @@ export default function DebateView({
 
     const pA = room.players.find(p => p.id === round.debatienteA_Id);
     const pB = room.players.find(p => p.id === round.debatienteB_Id);
+    const activePlayer = round.activeSpeaker === "debatiente_a" ? pA : pB;
 
     // Local manual tracking of passed time to smooth between polling intervals
     const [elapsedSec, setElapsedSec] = useState(0);
@@ -68,111 +70,68 @@ export default function DebateView({
     const canSignalFallacy = room.players.length > 2;
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem', position: 'relative', paddingBottom: '2rem' }}>
-            
-            {/* AYUDA CONTEXTUAL SUPERIOR */}
-            <div style={{ 
-                background: 'rgba(255,255,255,0.03)', 
-                padding: '0.6rem 1rem', 
-                borderRadius: 'var(--radius-sm)', 
-                fontSize: '0.8rem', 
-                color: 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.6rem',
-                border: '1px solid rgba(255,255,255,0.05)'
-            }}>
-                <Info size={14} color="var(--accent-color)" />
-                {isActiveSpeaker ? (
-                    <span><strong>Tu turno:</strong> Argumentá con solidez y evitá falacias.</span>
-                ) : isSpeakingState ? (
-                    <span>Escuchá atentamente. Si detectás una <strong>falacia</strong>, denunciala.</span>
-                ) : (
-                    <span>Preparate para entrar al intercambio.</span>
-                )}
+        <div className={styles.shell}>
+            <div
+                className={`${styles.phaseCard} ${isActiveSpeaker ? (isTransitionState ? styles.phaseCardWaiting : styles.phaseCardActive) : ""}`}
+                aria-live="polite"
+            >
+                <span className={styles.phaseEyebrow}>{isTransitionState ? "Cambio de turno" : "Debate en curso"}</span>
+                <h1 className={styles.phaseTitle}>
+                    {isTransitionState
+                        ? (isActiveSpeaker ? `Prepárate · ${displayTransition}s` : `Sigue ${activePlayer?.name || "el próximo turno"}`)
+                        : (isActiveSpeaker ? "Tu turno · estás al aire" : `Habla ${activePlayer?.name || "otro jugador"}`)}
+                </h1>
+                <p className={styles.phaseHint}>
+                    {isActiveSpeaker
+                        ? "Defiende tu postura y cede la palabra cuando termines."
+                        : canSignalFallacy
+                            ? "Escucha el argumento. Puedes señalar una falacia."
+                            : "Escucha el argumento y prepara tu respuesta."}
+                </p>
             </div>
 
-            {/* AVISO GIGANTE DE TRANSICIÓN */}
-            {isTransitionState && isActiveSpeaker && (
-                <div className="animate-fade-in" style={{
-                    background: 'var(--warning-color)',
-                    color: 'black',
-                    padding: '1.2rem',
-                    borderRadius: 'var(--radius-md)',
-                    boxShadow: '0 8px 30px rgba(234, 179, 8, 0.4)',
-                    border: '1px solid rgba(0,0,0,0.1)'
-                }}>
-                    <h1 style={{ fontSize: '1.8rem', margin: 0, textTransform: 'uppercase', lineHeight: 1, fontWeight: 900 }}>¡PREPÁRATE!</h1>
-                    <p style={{ margin: '0.4rem 0 0', fontWeight: 800, fontSize: '1rem' }}>EMPIEZAS EN {displayTransition}s</p>
+            <div className={styles.timers} aria-label="Tiempo de los debatientes">
+                <div className={`${styles.timerPlayer} ${(isSpeakingState && round.activeSpeaker === "debatiente_a") ? styles.timerPlayerActive : ""}`}>
+                    <span className={styles.timerName}>{pA?.name}</span>
+                    <Timer durationSec={displayTimeA} isPaused={!isSpeakingState || round.activeSpeaker !== "debatiente_a"} accentColor="var(--success-color)" />
                 </div>
-            )}
-
-            {/* AVISO GIGANTE DE HABLA */}
-            {isSpeakingState && isActiveSpeaker && (
-                <div className="animate-fade-in" style={{
-                    background: 'linear-gradient(135deg, var(--success-color) 0%, #10b981 100%)',
-                    color: 'white',
-                    padding: '1.2rem',
-                    borderRadius: 'var(--radius-md)',
-                    boxShadow: '0 8px 30px rgba(16, 185, 129, 0.4)',
-                    border: '1px solid rgba(255,255,255,0.2)'
-                }}>
-                    <h1 style={{ fontSize: '2rem', margin: 0, textTransform: 'uppercase', lineHeight: 1, fontWeight: 900 }}>EN EL AIRE 🎙️</h1>
-                    <p style={{ margin: '0.4rem 0 0', fontWeight: 800, fontSize: '0.9rem' }}>LA PALABRA ES TUYA</p>
+                <span className={styles.versus}>VS</span>
+                <div className={`${styles.timerPlayer} ${(isSpeakingState && round.activeSpeaker === "debatiente_b") ? styles.timerPlayerActive : ""}`}>
+                    <span className={styles.timerName}>{pB?.name}</span>
+                    <Timer durationSec={displayTimeB} isPaused={!isSpeakingState || round.activeSpeaker !== "debatiente_b"} accentColor="#3b82f6" />
                 </div>
-            )}
+            </div>
 
             {/* ESTRUCTURA DEL DEBATE */}
-            <div className="glass-panel" style={{ padding: '1.2rem', background: 'rgba(255,255,255,0.02)', borderLeft: '4px solid var(--accent-color)' }}>
-                <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <div className={`glass-panel ${styles.premiseCard}`}>
+                <div>
+                    <div className={styles.premiseLabel}>
                          <MessageSquare size={14} color="var(--accent-color)" />
-                         <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>PREMISA</span>
+                         <span>Premisa</span>
                     </div>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'white', lineHeight: 1.3, margin: 0 }}>
+                    <h3 className={styles.premise}>
                         “{topic?.statement || 'Premisa no encontrada'}”
                     </h3>
                 </div>
 
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.03)' }}>
-                    {myRole === "debatiente_a" && (
-                        <div style={{ fontSize: '0.9rem', lineHeight: 1.4 }}>
-                            <span style={{ color: 'var(--success-color)', fontWeight: 800 }}>TU POSTURA:</span> {topic?.angleA}
-                        </div>
-                    )}
-                    {myRole === "debatiente_b" && (
-                        <div style={{ fontSize: '0.9rem', lineHeight: 1.4 }}>
-                            <span style={{ color: 'var(--danger-color)', fontWeight: 800 }}>TU POSTURA:</span> {topic?.angleB}
-                        </div>
-                    )}
-                    {(myRole !== "debatiente_a" && myRole !== "debatiente_b") && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            <div style={{ fontSize: '0.85rem' }}><span style={{ color: 'var(--success-color)', fontWeight: 800 }}>{pA?.name}:</span> {topic?.angleA}</div>
-                            <div style={{ fontSize: '0.85rem' }}><span style={{ color: 'var(--danger-color)', fontWeight: 800 }}>{pB?.name}:</span> {topic?.angleB}</div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* SISTEMA DE RELOJ DE AJEDREZ */}
-            <div style={{ margin: '0.5rem 0' }}>
-                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', width: '100%' }}>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center', opacity: (isSpeakingState && round.activeSpeaker === "debatiente_a") ? 1 : 0.3, transition: 'all 0.3s' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'white' }}>{pA?.name}</span>
-                        <Timer durationSec={displayTimeA} isPaused={!isSpeakingState || round.activeSpeaker !== "debatiente_a"} />
+                {(myRole === "debatiente_a" || myRole === "debatiente_b") ? (
+                    <div className={styles.position}>
+                        <span style={{ color: myRole === "debatiente_a" ? 'var(--success-color)' : '#3b82f6', fontWeight: 800 }}>TU POSTURA:</span>{" "}
+                        {myRole === "debatiente_a" ? topic?.angleA : topic?.angleB}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', opacity: 0.2 }}>
-                        <span style={{ fontSize: '1rem', fontWeight: 900 }}>VS</span>
-                    </div>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center', opacity: (isSpeakingState && round.activeSpeaker === "debatiente_b") ? 1 : 0.3, transition: 'all 0.3s' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'white' }}>{pB?.name}</span>
-                        <Timer durationSec={displayTimeB} isPaused={!isSpeakingState || round.activeSpeaker !== "debatiente_b"} />
-                    </div>
-                </div>
+                ) : (
+                    <details className={styles.positionsDisclosure}>
+                        <summary>Ver las dos posturas</summary>
+                        <div className={styles.positionsList}>
+                            <div><span style={{ color: 'var(--success-color)', fontWeight: 800 }}>{pA?.name}:</span> {topic?.angleA}</div>
+                            <div><span style={{ color: '#3b82f6', fontWeight: 800 }}>{pB?.name}:</span> {topic?.angleB}</div>
+                        </div>
+                    </details>
+                )}
             </div>
 
             {/* ACCIONES */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: 'auto' }}>
+            <div className={styles.actions}>
                 {isTransitionState && isActiveSpeaker && (
                     <button
                         onClick={onStartSpeaking}

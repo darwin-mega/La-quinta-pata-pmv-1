@@ -12,19 +12,31 @@ const DURATION_LABELS: Record<GameDuration, string> = {
     leyenda: "Leyenda",
 };
 
-export const getMaxRounds = (room: Room) => {
-    const numPlayers = room.players.length;
+const DURATION_DESCRIPTIONS: Record<GameDuration, string> = {
+    corta: "Ágil · hasta 6 rondas",
+    larga: "Completa · hasta 9 rondas",
+    leyenda: "Épica · hasta 12 rondas",
+};
 
-    if (room.duration === "corta") {
+const ROUND_MINUTES: Record<GameDuration, number> = {
+    corta: 6,
+    larga: 9,
+    leyenda: 9,
+};
+
+export const getMaxRoundsForPlayers = (numPlayers: number, duration: GameDuration) => {
+    if (duration === "corta") {
         return Math.ceil(numPlayers / 2);
     }
 
-    if (room.duration === "larga") {
-        return Math.ceil((numPlayers * 3) / 2);
+    if (duration === "larga") {
+        return Math.min(Math.ceil((numPlayers * 3) / 2), 9);
     }
 
-    return (numPlayers * (numPlayers - 1)) / 2;
+    return Math.min((numPlayers * (numPlayers - 1)) / 2, 12);
 };
+
+export const getMaxRounds = (room: Room) => getMaxRoundsForPlayers(room.players.length, room.duration);
 
 export const hasGameEnded = (room: Room) => {
     if (room.currentRoundIndex < 0) return false;
@@ -36,3 +48,13 @@ export const isTwoPlayerRoom = (room: Room) => room.players.length === 2;
 export const getGameIntensityLabel = (intensity: GameIntensity) => INTENSITY_LABELS[intensity] || intensity;
 
 export const getGameDurationLabel = (duration: GameDuration) => DURATION_LABELS[duration] || duration;
+
+export const getGameDurationDescription = (duration: GameDuration) => DURATION_DESCRIPTIONS[duration];
+
+export const getEstimatedGameMinutes = (room: Room) => {
+    return getMaxRounds(room) * ROUND_MINUTES[room.duration];
+};
+
+export const getEstimatedGameMinutesForPlayers = (numPlayers: number, duration: GameDuration) => {
+    return getMaxRoundsForPlayers(numPlayers, duration) * ROUND_MINUTES[duration];
+};

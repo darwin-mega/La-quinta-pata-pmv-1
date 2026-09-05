@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { playTickSound, playTimeoutSound } from "@/lib/sounds";
 
-export default function Timer({ durationSec, onComplete, isPaused = false }: { durationSec: number, onComplete?: () => void, isPaused?: boolean }) {
+export default function Timer({
+    durationSec,
+    onComplete,
+    isPaused = false,
+    accentColor = "var(--accent-color)",
+}: {
+    durationSec: number;
+    onComplete?: () => void;
+    isPaused?: boolean;
+    accentColor?: string;
+}) {
     const [timeLeft, setTimeLeft] = useState(durationSec);
     const hasCompletedRef = useRef(false);
 
@@ -42,15 +52,17 @@ export default function Timer({ durationSec, onComplete, isPaused = false }: { d
 
     return (
         <div style={{
-            fontSize: isCritical ? '3rem' : '2.5rem',
+            fontSize: isCritical ? 'clamp(2rem, 10vw, 3rem)' : 'clamp(1.7rem, 8vw, 2.5rem)',
             fontWeight: 'bold',
             fontFamily: 'monospace',
-            color: isUrgent ? 'var(--danger-color)' : 'var(--accent-color)',
+            color: isUrgent ? 'var(--danger-color)' : accentColor,
             textAlign: 'center',
-            padding: '1rem',
+            width: '100%',
+            minWidth: 0,
+            padding: '0.8rem 0.45rem',
             background: 'rgba(0,0,0,0.2)',
             borderRadius: 'var(--radius-md)',
-            border: `1px solid ${isUrgent ? 'var(--danger-color)' : 'var(--border-color)'}`,
+            border: `1px solid ${isUrgent ? 'var(--danger-color)' : accentColor}`,
             boxShadow: isCritical ? '0 0 20px rgba(244, 63, 94, 0.5)' : 'none',
             transform: isCritical && secs % 2 === 0 ? 'scale(1.05)' : 'scale(1)',
             transition: 'all 0.2s',

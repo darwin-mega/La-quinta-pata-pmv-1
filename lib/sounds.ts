@@ -78,7 +78,7 @@ function getStoredPreference() {
     }
 
     const savedPreference = window.localStorage.getItem("laquinta_audio_enabled");
-    cachedPreference = savedPreference !== "false";
+    cachedPreference = savedPreference === "true";
     return cachedPreference;
 }
 
